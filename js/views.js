@@ -22,8 +22,8 @@
     const hello = hour >= 22 || hour < 5 ? 'Bonne soirée' : hour < 12 ? 'Bonjour' : 'Salut';
 
     let mission, cta;
-    const first = DATA.chapters[0].id;
-    if (!seen) { mission = 'Commence par lire la fiche du chapitre 1, puis lance ta première série de flashcards. Chaque bonne réponse colore ta parcelle.'; cta = h('a', { class: 'btn primary big', href: '#/fiche/' + first }, icon('book', 18), 'Lire la fiche du chapitre 1'); }
+    const first = DATA.chapters[0].id, firstName = DATA.chapters[0].n === 0 ? 'l\'introduction' : 'du chapitre ' + DATA.chapters[0].n;
+    if (!seen) { mission = 'Commence par lire la fiche ' + firstName.replace(/^l'/, 'de l\'') + ', puis lance ta première série de flashcards. Chaque bonne réponse colore ta parcelle.'; cta = h('a', { class: 'btn primary big', href: '#/fiche/' + first }, icon('book', 18), 'Lire la fiche ' + firstName.replace(/^l'/, 'de l\'')); }
     else if (due > 0) { mission = `${due} élément${due > 1 ? 's' : ''} à revoir aujourd'hui. Dix minutes suffisent pour les remettre en mémoire.`; cta = h('a', { class: 'btn primary big', href: '#/quiz/go' }, icon('play', 18), 'Lancer la mission du jour'); }
     else { mission = 'Tout est à jour. Tu peux attaquer du nouveau, ou t\'éprouver avec un examen blanc.'; cta = h('a', { class: 'btn primary big', href: '#/quiz/go' }, icon('play', 18), 'Faire un quiz express'); }
 

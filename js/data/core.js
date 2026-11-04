@@ -12,8 +12,9 @@ window.MATIERES = [
       { name: 'Propriété', fem: 'Propriété', line: 'Propriétaire : il est à toi.' }
     ],
     titles: ['Détentrice précaire', 'Possesseure', 'Possesseure de bonne foi', 'Usucapante', 'Propriétaire', 'Propriétaire exclusive', 'Notaire', 'Magistrate', 'Conseillère à la Cour de cassation', 'Doyenne de la faculté'],
-    parts: [['Partie 1 · Les relations aux biens : propriété et possession', [['Titre 1 · La propriété', ['c1', 'c2']], ['Titre 2 · La possession', ['c3', 'c4']]]], ['Partie 2 · Les modalités de relation de propriété aux biens', [['Titre 1 · La propriété individuelle', ['c5']]]]],
+    parts: [['Introduction · Les notions de base', [['Biens, droits réels, patrimoine', ['c0']]]], ['Partie 1 · Les relations aux biens : propriété et possession', [['Titre 1 · La propriété', ['c1', 'c2']], ['Titre 2 · La possession', ['c3', 'c4']]]], ['Partie 2 · Les modalités de relation de propriété aux biens', [['Titre 1 · La propriété individuelle', ['c5']]]]],
     chapters: [
+      {id:'c0', n:0, part:'Introduction', title:'Introduction : biens, droits et patrimoine', short:'Introduction', blurb:'chose et bien, réel et personnel, meubles et immeubles, patrimoine', col:'#D9BF8C', src:'fiche_intro'},
       {id:'c1', n:1, part:'Partie 1 · Titre 1', title:'Les attributs du droit de propriété', short:'Attributs', blurb:'usus, fructus, abusus et libre transmissibilité', col:'#F2A6A0', src:'chapitre_1'},
       {id:'c2', n:2, part:'Partie 1 · Titre 1', title:'La portée du droit de propriété', short:'Portée', blurb:'dessus, dessous, eaux et accession', col:'#F3CE72', src:'chapitre_2_1'},
       {id:'c3', n:3, part:'Partie 1 · Titre 2', title:'La notion de possession', short:'Possession', blurb:'corpus, animus, vices et bonne foi', col:'#B9A6EB', src:'chapitre_1_1'},

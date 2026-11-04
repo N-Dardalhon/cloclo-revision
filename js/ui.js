@@ -123,6 +123,13 @@
       c5: [Sp, M[2], M[3], B[2], B[1]]
     };
     let H = 400;
+    // chapitre d'introduction : une bande en haut du plan, le reste glisse dessous
+    if (DATA.chapters.some(c => c.id === 'c0')) {
+      const dy = 155;
+      Object.keys(polys).forEach(k => { polys[k] = polys[k].map(p => [p[0], p[1] + dy]); });
+      polys.c0 = [[0, 0], [640, 0], [640, dy], [430, dy], [214, dy], [0, dy]];
+      H += dy;
+    }
     if (!DATA.chapters.every(c => polys[c.id])) { const g = gridParcels(DATA.chapters); polys = g.polys; H = g.H; }
     const root = svg('svg', { viewBox: `-8 -8 656 ${H + 16}`, class: 'map', role: 'group', 'aria-label': 'Plan cadastral du cours : une parcelle par chapitre' });
     const defs = svg('defs');
