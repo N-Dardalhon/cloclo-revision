@@ -21,18 +21,28 @@
     quiz: Games.quiz, cartes: Games.cartes, vf: Games.vf, articles: Games.articles, associer: Games.associer, cas: Games.cas, questions: Games.questions, examen: Games.examen
   };
 
+  document.documentElement.dataset.matiere = SITE.matiere;
+
   /* ---------- Thème ---------- */
   function applyTheme() {
     const d = S().prefs.dark;
     const dark = d == null ? matchMedia('(prefers-color-scheme: dark)').matches : d;
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    const m = $('meta[name=theme-color]'); if (m) m.content = dark ? '#0F1B16' : '#EDF2EC';
+    const vente = SITE.matiere === 'vente';
+    const m = $('meta[name=theme-color]'); if (m) m.content = vente ? (dark ? '#141A2A' : '#1E2A44') : (dark ? '#0F1B16' : '#EDF2EC');
     $$('.theme-btn').forEach(b => { b.replaceChildren(icon(dark ? 'sun' : 'moon', 20)); b.setAttribute('aria-label', dark ? 'Passer en thème clair' : 'Passer en thème sombre'); });
   }
   function toggleTheme() { const cur = document.documentElement.dataset.theme === 'dark'; S().prefs.dark = !cur; ST.save(); applyTheme(); }
 
   /* ---------- Logo ---------- */
   const logo = () => {
+    if (SITE.matiere === 'vente') { // sceau de cire
+      const s = UI.svg('svg', { viewBox: '0 0 40 40', width: 34, height: 34, 'aria-hidden': 'true', class: 'logo-svg' });
+      s.append(UI.svg('path', { d: 'M20 1.5c2.6 0 3.4 2.4 5.8 3.2 2.5.8 4.6-.7 6.5 1s.6 4.1 1.6 6.5c1 2.3 3.6 2.9 3.6 5.6s-2.5 3.4-3.4 5.8c-.9 2.4.6 4.6-1.2 6.5s-4.2.5-6.5 1.6c-2.3 1-3 3.6-5.6 3.6s-3.3-2.5-5.7-3.4c-2.4-.9-4.6.7-6.5-1.1s-.6-4.2-1.6-6.5C6 22.9 3.4 22.2 3.4 19.6s2.5-3.3 3.4-5.7c.9-2.4-.6-4.6 1.2-6.5s4.2-.5 6.5-1.6c2.3-1 2.9-3.6 5.5-3.6Z', fill: '#8E2333' }));
+      s.append(UI.svg('circle', { cx: 20, cy: 20, r: 11, fill: 'none', stroke: '#F3D9A8', 'stroke-width': 1.4 }));
+      s.append(UI.svg('text', { x: 20, y: 25.5, 'text-anchor': 'middle', fill: '#F3D9A8', 'font-family': 'Newsreader, Georgia, serif', 'font-size': 16, 'font-style': 'italic', 'font-weight': 700 }, 'V'));
+      return s;
+    }
     const s = UI.svg('svg', { viewBox: '0 0 40 40', width: 34, height: 34, 'aria-hidden': 'true', class: 'logo-svg' });
     s.append(UI.svg('rect', { width: 40, height: 40, rx: 8, fill: '#14271F' }));
     [['M5 5h14l-2 13H5Z', '#F2A6A0'], ['M21 5h14v10l-14 3Z', '#F3CE72'], ['M5 21h12l4 14H5Z', '#B9A6EB'], ['M23 21l12-2v16H25Z', '#9ED08A']].forEach(p => s.append(UI.svg('path', { d: p[0], fill: p[1] })));
@@ -56,7 +66,7 @@
 
   /* ---------- Coque ---------- */
   function shell() {
-    const nav = (cls) => h('nav', { class: cls, 'aria-label': 'Navigation principale' }, NAV.map(n => h('a', { href: '#/' + n[0], 'data-g': n[0], class: 'nav-a' }, icon(n[2], 22), h('span', null, n[1]))));
+    const nav = (cls) => h('nav', { class: cls, id: cls === 'tabs' ? 'tabs' : null, 'aria-label': 'Navigation principale' }, NAV.map(n => h('a', { href: '#/' + n[0], 'data-g': n[0], class: 'nav-a' }, icon(n[2], 22), h('span', null, n[1]))));
     const hud = h('div', { class: 'hud', id: 'hud' });
     const searchBtn = () => h('button', { class: 'icon-btn', type: 'button', onclick: Views.search, 'aria-label': 'Rechercher (touche /)', title: 'Rechercher' }, icon('search', 20));
     const themeBtn = () => h('button', { class: 'icon-btn theme-btn', type: 'button', onclick: toggleTheme });

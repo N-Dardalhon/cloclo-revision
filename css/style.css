@@ -564,3 +564,123 @@ tbody tr:last-child > * { border-bottom: 0; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   .stamp { opacity: .92; }
 }
+
+/* =====================================================================
+   Contrats spéciaux · direction « Acte de vente »
+   Papier ministre ivoire, encre bleu nuit, bordeaux du sceau de cire,
+   titres en serif comme un acte notarié. Activé par html[data-matiere="vente"].
+   ===================================================================== */
+:root[data-matiere="vente"] {
+  --paper: #F7F2E8;
+  --paper-2: #EFE6D4;
+  --card: #FFFDF8;
+  --ink: #1E2A44;
+  --ink-fixed: #1E2A44;
+  --ink-2: #3F4B66;
+  --mute: #6C7186;
+  --hair: #DDD2BE;
+  --brand: #8E2333;
+  --brand-ink: #FFF8EC;
+  --stamp: #A3283A;
+  --ok: #2F6B4F;
+  --ko: #A3283A;
+  --gold: #E6C27A;
+  --rule: rgba(52, 86, 158, .10);
+  --margin: rgba(196, 52, 70, .35);
+}
+:root[data-matiere="vente"][data-theme="dark"] {
+  --paper: #141A2A;
+  --paper-2: #1A2236;
+  --card: #1E273D;
+  --ink: #EFE7D7;
+  --ink-2: #C9C1B1;
+  --mute: #9C9BA6;
+  --hair: #33405C;
+  --brand: #E07A88;
+  --brand-ink: #1A1220;
+  --stamp: #FF8A99;
+  --ok: #7CC6A1;
+  --ko: #FF8A99;
+  --gold: #D9B26A;
+  --rule: rgba(160, 180, 230, .06);
+  --margin: rgba(255, 120, 140, .22);
+}
+
+/* Papier ministre : lignes horizontales + marge rouge */
+[data-matiere="vente"] #col {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(90deg, transparent 18px, var(--margin) 18px, var(--margin) 19.5px, transparent 19.5px),
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--rule) 31px 32px);
+}
+
+/* Titres en serif d'acte */
+[data-matiere="vente"] h1,
+[data-matiere="vente"] .hero h1,
+[data-matiere="vente"] .page-head h1,
+[data-matiere="vente"] .fiche-head h1,
+[data-matiere="vente"] .section > h2,
+[data-matiere="vente"] .fiche-body h2 {
+  font-family: var(--font-t); font-weight: 600; letter-spacing: -0.01em;
+}
+[data-matiere="vente"] .hero h1 { font-style: italic; font-weight: 500; }
+[data-matiere="vente"] .page-head h1::after,
+[data-matiere="vente"] .fiche-head h1::after {
+  content: ''; display: block; width: 72px; height: 3px; margin-top: 14px; background: var(--brand); border-radius: 2px;
+}
+
+/* Rail foncé, comme la couverture d'un registre */
+[data-matiere="vente"] #rail { background: #1E2A44; color: #F3EBDD; border-right: 0; }
+[data-matiere="vente"][data-theme="dark"] #rail { background: #0E1320; }
+[data-matiere="vente"] #rail .brand small { color: #B9B4C2; }
+[data-matiere="vente"] #rail .brand b { font-family: var(--font-t); font-weight: 600; font-size: 1.15rem; }
+[data-matiere="vente"] #rail .nav-a { color: #D8D1C3; }
+[data-matiere="vente"] #rail .nav-a:hover { background: rgba(255, 255, 255, .07); }
+[data-matiere="vente"] #rail .nav-a.on { background: #F7F2E8; color: #1E2A44; border-color: #F7F2E8; box-shadow: 4px 4px 0 #8E2333; }
+[data-matiere="vente"] #rail .mat-switch { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .25); }
+[data-matiere="vente"] #rail .mat-switch button { color: #D8D1C3; }
+[data-matiere="vente"] #rail .mat-switch button.on { background: #8E2333; color: #FFF8EC; }
+[data-matiere="vente"] #rail .hud { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .25); color: #F3EBDD; }
+[data-matiere="vente"] #rail .hud-top small { color: #B9B4C2; }
+[data-matiere="vente"] #rail .track { background: rgba(0, 0, 0, .25); border-color: rgba(255, 255, 255, .35); }
+[data-matiere="vente"] #rail .fill { background: var(--gold); }
+[data-matiere="vente"] #rail .streak { color: #FFB3BE; }
+[data-matiere="vente"] #rail .icon-btn { background: transparent; color: #F3EBDD; border-color: rgba(255, 255, 255, .35); }
+[data-matiere="vente"] #rail .icon-btn:hover { background: var(--gold); color: #1E2A44; }
+
+/* Barre du haut (mobile) et barre d'onglets */
+[data-matiere="vente"] #topbar { background: #1E2A44; color: #F3EBDD; border-bottom: 0; }
+[data-matiere="vente"] #topbar .brand b { font-family: var(--font-t); font-weight: 600; font-size: 1.1rem; }
+[data-matiere="vente"] #topbar .icon-btn { background: transparent; color: #F3EBDD; border-color: rgba(255, 255, 255, .35); }
+[data-matiere="vente"] .mat-switch button.on { background: var(--brand); color: var(--brand-ink); }
+[data-matiere="vente"] #tabs .nav-a.on { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+
+/* Boutons, cartes : ombres bordeaux, coins plus doux */
+[data-matiere="vente"] .btn { border-radius: 6px; box-shadow: 0 3px 0 var(--ink); }
+[data-matiere="vente"] .btn.primary { box-shadow: 0 3px 0 #4E0F1A; border-color: #4E0F1A; }
+[data-matiere="vente"][data-theme="dark"] .btn.primary { box-shadow: 0 3px 0 #000; border-color: var(--brand); }
+[data-matiere="vente"] .tile-i { background: var(--paper-2); border-radius: 50%; }
+[data-matiere="vente"] .tile:hover .tile-i { background: var(--gold); }
+[data-matiere="vente"] .panel { box-shadow: 5px 5px 0 color-mix(in srgb, var(--brand) 22%, transparent); }
+[data-matiere="vente"] .ref { background: var(--paper-2); }
+
+/* Fiches : articles comme des clauses d'acte */
+[data-matiere="vente"] .f-art { background: var(--card); border-left: 5px solid var(--brand); border-radius: 4px; }
+[data-matiere="vente"] .f-art cite { background: var(--brand); color: var(--brand-ink); }
+[data-matiere="vente"] .f-art p { font-style: italic; }
+[data-matiere="vente"] .fiche-body h2 { border-top: 1px solid var(--ink); }
+[data-matiere="vente"] .fiche-body h2::before { border-radius: 50%; background: var(--brand); border-color: var(--brand); }
+[data-matiere="vente"] .big-n { font-family: var(--font-t); font-style: italic; font-weight: 600; clip-path: none; border-radius: 50%; }
+
+/* Plan : parcelles façon timbres fiscaux */
+[data-matiere="vente"] .p-num { font-family: var(--font-t); font-style: italic; font-weight: 600; }
+[data-matiere="vente"] .p-line { stroke-dasharray: 2 4; stroke-linecap: round; stroke-width: 2.2; }
+[data-matiere="vente"] .borne { fill: var(--brand); }
+
+/* Tampons : encre bordeaux */
+[data-matiere="vente"] .stamp.ok { color: var(--ok); }
+[data-matiere="vente"] .stamp.ko { color: var(--stamp); }
+
+@media (max-width: 900px) {
+  [data-matiere="vente"] #col { background-image: repeating-linear-gradient(180deg, transparent 0 31px, var(--rule) 31px 32px); }
+}
