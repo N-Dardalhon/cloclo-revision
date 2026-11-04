@@ -64,9 +64,11 @@ window.MATIERES = [
   };
   window.DATA = {
     chapters: M.chapters,
+    all:{}, // données brutes de toutes les matières (pour le cerveau)
     fiche:{}, cards:[], qcm:[], vf:[], cas:[], arts:[], gloss:[], juris:[], coursq:[], nums:[], trees:[],
     load(ch, o){
       const D=this;
+      D.all[ch]=o;
       if(!D.chapters.some(c => c.id === ch)) return; // chapitre d'une autre matière
       if(o.fiche) D.fiche[ch]=o.fiche;
       (o.cards||[]).forEach((x,i)=>D.cards.push({id:`k-${ch}-${i}`,ch,q:x[0],a:x[1],ref:x[2]||''}));

@@ -18,7 +18,7 @@
   const ROUTES = {
     '': Views.home, home: Views.home, cours: Views.cours, chapitre: Views.chapitre, fiche: Views.fiche, jouer: Views.jouer, glossaire: Views.glossaire,
     chiffres: Views.chiffres, jurisprudence: Views.jurisprudence, schemas: Views.schemas, progres: Views.progres,
-    quiz: Games.quiz, cartes: Games.cartes, vf: Games.vf, articles: Games.articles, associer: Games.associer, cas: Games.cas, questions: Games.questions, examen: Games.examen
+    quiz: Games.quiz, cartes: Games.cartes, vf: Games.vf, articles: Games.articles, associer: Games.associer, cas: Games.cas, questions: Games.questions, examen: Games.examen, cerveau: Brain.view
   };
 
   document.documentElement.dataset.matiere = SITE.matiere;
@@ -64,6 +64,19 @@
   const matSwitch = () => h('div', { class: 'mat-switch', role: 'group', 'aria-label': 'Matière' }, MATIERES.map(m =>
     h('button', { type: 'button', class: m.id === SITE.matiere ? 'on' : null, 'aria-pressed': m.id === SITE.matiere ? 'true' : 'false', onclick() { switchMatiere(m.id); } }, SHORT[m.id] || m.title)));
 
+  /* ---------- Easter egg : 7 taps sur le logo, « cerveau » au clavier, ou code Konami ---------- */
+  let taps = [];
+  function logoTap() { const t = Date.now(); taps = taps.filter(x => t - x < 3000); taps.push(t); if (taps.length >= 7) { taps = []; Brain.egg(); } }
+  const KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+  let kpos = 0, typed = '';
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input,textarea,select')) return;
+    const k = (e.key || '').toLowerCase();
+    kpos = k === KONAMI[kpos] ? kpos + 1 : (k === KONAMI[0] ? 1 : 0);
+    if (kpos === KONAMI.length) { kpos = 0; Brain.egg(); }
+    if (k.length === 1) { typed = (typed + k).slice(-7); if (typed === 'cerveau') { typed = ''; Brain.egg(); } }
+  });
+
   /* ---------- Coque ---------- */
   function shell() {
     const nav = (cls) => h('nav', { class: cls, id: cls === 'tabs' ? 'tabs' : null, 'aria-label': 'Navigation principale' }, NAV.map(n => h('a', { href: '#/' + n[0], 'data-g': n[0], class: 'nav-a' }, icon(n[2], 22), h('span', null, n[1]))));
@@ -71,9 +84,9 @@
     const searchBtn = () => h('button', { class: 'icon-btn', type: 'button', onclick: Views.search, 'aria-label': 'Rechercher (touche /)', title: 'Rechercher' }, icon('search', 20));
     const themeBtn = () => h('button', { class: 'icon-btn theme-btn', type: 'button', onclick: toggleTheme });
     const rail = h('aside', { id: 'rail' },
-      h('a', { class: 'brand', href: '#/' }, logo(), h('span', null, h('b', null, SITE.title), h('small', null, SITE.subtitle))),
+      h('a', { class: 'brand', href: '#/', onclick: logoTap }, logo(), h('span', null, h('b', null, SITE.title), h('small', null, SITE.subtitle))),
       matSwitch(), nav('side-nav'), hud, h('div', { class: 'rail-tools' }, searchBtn(), themeBtn()));
-    const top = h('header', { id: 'topbar' }, h('a', { class: 'brand', href: '#/' }, logo(), h('b', null, SITE.title)), h('div', { class: 'rail-tools' }, searchBtn(), themeBtn()));
+    const top = h('header', { id: 'topbar' }, h('a', { class: 'brand', href: '#/', onclick: logoTap }, logo(), h('b', null, SITE.title)), h('div', { class: 'rail-tools' }, searchBtn(), themeBtn()));
     const main = h('main', { id: 'main', tabindex: '-1' });
     const topSwitch = h('div', { class: 'top-switch' }, matSwitch());
     document.body.replaceChildren(
