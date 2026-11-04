@@ -1,4 +1,4 @@
-# Droit des biens — site de révision (L3)
+# Site de révision L3 : droit des biens et contrats spéciaux
 
 Site statique (HTML/CSS/JS, aucune installation) : fiches, flashcards à répétition espacée, QCM, vrai/faux, articles à compléter, cas pratiques, schémas interactifs, examen blanc, XP, séries et badges. La progression est enregistrée dans le navigateur.
 
@@ -7,9 +7,13 @@ Site statique (HTML/CSS/JS, aucune installation) : fiches, flashcards à répét
 2. Settings → Pages → *Deploy from a branch* → `main` / `/ (root)` → Save.
 3. Le site est disponible à `https://<pseudo>.github.io/<depot>/` après ~1 minute.
 
+## Matières
+Un sélecteur (en haut du menu) permet de passer d'une matière à l'autre. Chaque matière a sa propre progression (XP, séries, badges).
+- **Droit des biens** : `js/data/c1.js` … `c5.js`, schémas dans `js/data/trees.js`.
+- **Contrats spéciaux (la vente)** : `js/data/v1.js` … `v9.js`, schémas dans `js/data/trees-vente.js`.
+
 ## Personnaliser
-- Prénom et date du partiel préréglés : `SITE.name` et `SITE.exam` (dans `js/data/core.js`) (sinon le site le demande à la première visite).
-- Contenu : `js/data/c1.js` … `c5.js` (un fichier par chapitre), `js/data/trees.js` (schémas).
+- Matières, chapitres, prénom et dates de partiel : `MATIERES` et `SITE` dans `js/data/core.js`.
 - Date du partiel : page Progrès → Réglages.
 
 ## Hors ligne

@@ -22,13 +22,14 @@
     const hello = hour >= 22 || hour < 5 ? 'Bonne soirée' : hour < 12 ? 'Bonjour' : 'Salut';
 
     let mission, cta;
-    if (!seen) { mission = 'Commence par lire la fiche du chapitre 1, puis lance ta première série de flashcards. Chaque bonne réponse colore ta parcelle.'; cta = h('a', { class: 'btn primary big', href: '#/fiche/c1' }, icon('book', 18), 'Lire la fiche du chapitre 1'); }
+    const first = DATA.chapters[0].id;
+    if (!seen) { mission = 'Commence par lire la fiche du chapitre 1, puis lance ta première série de flashcards. Chaque bonne réponse colore ta parcelle.'; cta = h('a', { class: 'btn primary big', href: '#/fiche/' + first }, icon('book', 18), 'Lire la fiche du chapitre 1'); }
     else if (due > 0) { mission = `${due} élément${due > 1 ? 's' : ''} à revoir aujourd'hui. Dix minutes suffisent pour les remettre en mémoire.`; cta = h('a', { class: 'btn primary big', href: '#/quiz/go' }, icon('play', 18), 'Lancer la mission du jour'); }
     else { mission = 'Tout est à jour. Tu peux attaquer du nouveau, ou t\'éprouver avec un examen blanc.'; cta = h('a', { class: 'btn primary big', href: '#/quiz/go' }, icon('play', 18), 'Faire un quiz express'); }
 
     const hero = h('section', { class: 'hero' },
       h('div', { class: 'hero-text' },
-        h('h1', null, name ? `${hello} ${name}.` : 'Ton cours de droit des biens, en parcelles.'),
+        h('h1', null, name ? `${hello} ${name}.` : 'Ton cours de ' + SITE.title.toLowerCase() + ', en parcelles.'),
         h('p', { class: 'lede' }, mission),
         h('div', { class: 'row-actions' }, cta, h('a', { class: 'btn', href: '#/jouer' }, 'Tous les jeux')),
         h('dl', { class: 'quick-stats' },
@@ -36,9 +37,9 @@
           h('div', null, h('dt', null, 'XP'), h('dd', null, S().xp)),
           h('div', null, h('dt', null, 'Cours maîtrisé'), h('dd', null, Math.round(gm * 100) + ' %')),
           exam != null ? h('div', null, h('dt', null, 'Partiel'), h('dd', null, exam > 0 ? 'J-' + exam : exam === 0 ? 'Aujourd\'hui' : 'passé')) : null)),
-      h('figure', { class: 'map-wrap' }, UI.parcelMap(), h('figcaption', null, 'Le plan de ton cours. Chaque parcelle se colore à mesure que tu la maîtrises : détenue, possédée, usucapée, puis propriété. Touche-en une.')));
+      h('figure', { class: 'map-wrap' }, UI.parcelMap(), h('figcaption', null, 'Le plan de ton cours. Chaque parcelle se colore à mesure que tu la maîtrises : ' + SITE.states.map(x => x.fem.toLowerCase()).join(', ').replace(/, ([^,]+)$/, ', puis $1') + '. Touche-en une.')));
 
-    const list = h('section', { class: 'section' }, h('h2', null, 'Les cinq chapitres'),
+    const list = h('section', { class: 'section' }, h('h2', null, 'Les ' + (['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix'][DATA.chapters.length] || DATA.chapters.length) + ' chapitres'),
       h('div', { class: 'chap-list' }, DATA.chapters.map(c => {
         const m = ST.mastery(c.id), st = ST.state(m);
         return h('a', { class: 'chap-row', href: '#/chapitre/' + c.id, style: { '--c': c.col } },
@@ -131,13 +132,13 @@
   /* ================= COURS (hub) ================= */
   function cours(box) {
     const tiles = [
-      ['book', 'Fiches de cours', DATA.chapters.length + ' chapitres', '#/chapitre/c1'],
+      ['book', 'Fiches de cours', DATA.chapters.length + ' chapitres', '#/chapitre/' + DATA.chapters[0].id],
       ['hash', 'Glossaire', DATA.gloss.length + ' termes', '#/glossaire'],
       ['flow', 'Schémas interactifs', DATA.trees.length + ' arbres de décision', '#/schemas'],
       ['list', 'Chiffres et délais', DATA.nums.length + ' repères', '#/chiffres'],
       ['gavel', 'Jurisprudence', DATA.juris.length + ' arrêts', '#/jurisprudence']
     ];
-    const parts = [['Partie 1 · Les relations aux biens : propriété et possession', [['Titre 1 · La propriété', ['c1', 'c2']], ['Titre 2 · La possession', ['c3', 'c4']]]], ['Partie 2 · Les modalités de relation de propriété aux biens', [['Titre 1 · La propriété individuelle', ['c5']]]]];
+    const parts = SITE.parts;
     box.replaceChildren(h('div', { class: 'wrap' }, head('Le cours', 'Fiches, repères et outils pour comprendre avant de s\'entraîner.'),
       h('div', { class: 'tiles' }, tiles.map(t => h('a', { class: 'tile', href: t[3] }, h('span', { class: 'tile-i' }, icon(t[0], 22)), h('b', null, t[1]), h('small', null, t[2])))),
       h('section', { class: 'section' }, h('h2', null, 'Plan général'),
@@ -260,7 +261,7 @@
           h('label', { class: 'set' }, h('span', null, 'Prénom'), h('input', { class: 'field', value: s.name, placeholder: 'Ton prénom', onchange(e) { s.name = e.target.value.trim(); ST.save(); } })),
           h('label', { class: 'set' }, h('span', null, 'Date du partiel (pour le compte à rebours)'), examInput),
           h('div', { class: 'row-actions' },
-            h('button', { class: 'btn', type: 'button', onclick() { const blob = new Blob([JSON.stringify(s)], { type: 'application/json' }); const a = h('a', { href: URL.createObjectURL(blob), download: 'progression-droit-des-biens.json' }); document.body.append(a); a.click(); a.remove(); } }, 'Exporter ma progression'),
+            h('button', { class: 'btn', type: 'button', onclick() { const blob = new Blob([JSON.stringify(s)], { type: 'application/json' }); const a = h('a', { href: URL.createObjectURL(blob), download: 'progression-' + SITE.matiere + '.json' }); document.body.append(a); a.click(); a.remove(); } }, 'Exporter ma progression'),
             h('button', { class: 'btn', type: 'button', onclick: () => fileIn.click() }, 'Importer'), fileIn,
             h('button', { class: 'btn danger', type: 'button', onclick() { if (confirm('Effacer toute ta progression ? Cette action est définitive.')) { ST.reset(); location.hash = '#/'; location.reload(); } } }, 'Tout effacer'))))));
   }

@@ -39,6 +39,21 @@
     return s;
   };
 
+  /* ---------- Choix de la matière ---------- */
+  const SHORT = { biens: 'Droit des biens', vente: 'Contrats spéciaux' };
+  function switchMatiere(id) {
+    if (id === SITE.matiere) return;
+    // on garde le thème choisi d'une matière à l'autre
+    try {
+      const m = MATIERES.find(x => x.id === id), o = JSON.parse(localStorage.getItem(m.key) || '{}');
+      o.prefs = Object.assign({ chapters: [], dark: null }, o.prefs, { dark: S().prefs.dark });
+      localStorage.setItem(m.key, JSON.stringify(o));
+    } catch (e) { }
+    SITE.switchTo(id);
+  }
+  const matSwitch = () => h('div', { class: 'mat-switch', role: 'group', 'aria-label': 'Matière' }, MATIERES.map(m =>
+    h('button', { type: 'button', class: m.id === SITE.matiere ? 'on' : null, 'aria-pressed': m.id === SITE.matiere ? 'true' : 'false', onclick() { switchMatiere(m.id); } }, SHORT[m.id] || m.title)));
+
   /* ---------- Coque ---------- */
   function shell() {
     const nav = (cls) => h('nav', { class: cls, 'aria-label': 'Navigation principale' }, NAV.map(n => h('a', { href: '#/' + n[0], 'data-g': n[0], class: 'nav-a' }, icon(n[2], 22), h('span', null, n[1]))));
@@ -47,12 +62,13 @@
     const themeBtn = () => h('button', { class: 'icon-btn theme-btn', type: 'button', onclick: toggleTheme });
     const rail = h('aside', { id: 'rail' },
       h('a', { class: 'brand', href: '#/' }, logo(), h('span', null, h('b', null, SITE.title), h('small', null, SITE.subtitle))),
-      nav('side-nav'), hud, h('div', { class: 'rail-tools' }, searchBtn(), themeBtn()));
+      matSwitch(), nav('side-nav'), hud, h('div', { class: 'rail-tools' }, searchBtn(), themeBtn()));
     const top = h('header', { id: 'topbar' }, h('a', { class: 'brand', href: '#/' }, logo(), h('b', null, SITE.title)), h('div', { class: 'rail-tools' }, searchBtn(), themeBtn()));
     const main = h('main', { id: 'main', tabindex: '-1' });
+    const topSwitch = h('div', { class: 'top-switch' }, matSwitch());
     document.body.replaceChildren(
       h('a', { class: 'skip', href: '#main' }, 'Aller au contenu'),
-      h('div', { id: 'shell' }, rail, h('div', { id: 'col' }, top, main)),
+      h('div', { id: 'shell' }, rail, h('div', { id: 'col' }, top, topSwitch, main)),
       nav('tabs'));
     // filtre pour rendre le bord du tampon légèrement irrégulier
     document.body.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter></svg>');
@@ -80,6 +96,7 @@
     $$('.nav-a').forEach(a => a.classList.toggle('on', a.dataset.g === (GROUP[key] != null ? GROUP[key] : '')));
     main.className = 'enter';
     cleanup = view(main, parts.slice(1)) || null;
+    const ts = $('.top-switch'); if (ts) ts.hidden = !!key && key !== 'home';
     window.scrollTo(0, 0);
     document.title = (key ? key.charAt(0).toUpperCase() + key.slice(1) + ' · ' : '') + SITE.title;
   }
@@ -92,8 +109,8 @@
     const ok = () => { S().name = input.value.trim(); S().flags.askedName = 1; ST.save(); m.close(); go(); };
     m = UI.modal(h('form', { class: 'welcome', onsubmit(e) { e.preventDefault(); ok(); } },
       h('div', { class: 'welcome-logo' }, logo()),
-      h('h2', null, 'Bienvenue dans ton cours de droit des biens'),
-      h('p', null, 'Cinq chapitres, des fiches, des jeux et un plan cadastral qui se colore quand tu maîtrises le cours. Comment on t\'appelle ?'),
+      h('h2', null, 'Bienvenue dans tes révisions : ' + SITE.title.toLowerCase()),
+      h('p', null, DATA.chapters.length + ' chapitres, des fiches, des jeux et un plan qui se colore quand tu maîtrises le cours. Comment on t\'appelle ?'),
       input,
       h('div', { class: 'row-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'C\'est parti'), h('button', { class: 'btn ghost', type: 'button', onclick() { S().flags.askedName = 1; ST.save(); m.close(); } }, 'Plus tard'))),
       { locked: true, label: 'Bienvenue' });
@@ -107,6 +124,7 @@
     if (e.target.closest && e.target.closest('input,textarea,select')) return;
     if (e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) { e.preventDefault(); Views.search(); }
   });
+  window.App = { switchMatiere };
   go(); welcome();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
 })();

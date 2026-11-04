@@ -514,11 +514,11 @@
       sample(L, 10).forEach(x => out.push({ id: x.id, ch: x.ch, q: 'Quel arrêt dit ceci : « ' + x.sol + ' » ?', good: x.label, bad: sample(DATA.juris.filter(y => y.label !== x.label), 3).map(y => y.label), exp: x.keep, ref: '' }));
     }
     if (kind === 'nums') {
-      const pool = n => /ans$/.test(n) ? 'ans' : /^\d{4}$/.test(n) ? 'year' : 'small';
+      const pool = n => /\bans?$/.test(n) ? 'ans' : /jours?$/.test(n) ? 'jours' : /^\d{4}$/.test(n) ? 'year' : /\d\/\d/.test(n) ? 'frac' : /€$/.test(n) ? 'eur' : 'small';
       const L = DATA.nums.filter(x => chs.has(x.ch));
       sample(L, 10).forEach(x => {
         const p = pool(x.n); const cand = [...new Set(DATA.nums.filter(y => pool(y.n) === p && y.n !== x.n).map(y => y.n))];
-        const extra = p === 'ans' ? ['1 an', '5 ans', '20 ans'] : p === 'year' ? ['1804', '1955', '2020'] : ['1', '5', '6'];
+        const extra = { ans: ['1 an', '5 ans', '20 ans'], jours: ['7 jours', '10 jours', '30 jours'], year: ['1804', '1955', '2020'], frac: ['1/2', '1/10', '1/20', '7/12'], eur: ['500 €', '1 500 €', '5 000 €'] }[p] || ['1', '5', '6'];
         const bad = sample([...new Set([...cand, ...extra.filter(e => e !== x.n)])], 3);
         out.push({ id: x.id, ch: x.ch, q: 'Quel chiffre ou quelle durée ? ' + x.t, good: x.n, bad, exp: x.ref ? 'Référence : ' + x.ref : '', ref: '' });
       });

@@ -92,6 +92,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .icon-btn { display: grid; place-items: center; width: 40px; height: 40px; border: 1.5px solid var(--ink); border-radius: 8px; background: var(--card); }
 .icon-btn:hover { background: var(--gold); color: var(--ink-fixed); }
 #topbar { display: none; }
+.mat-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border: 1.5px solid var(--ink); border-radius: 9px; background: var(--card); }
+.mat-switch button { font: 700 .78rem/1.15 var(--font-d); padding: 7px 6px; border: 0; border-radius: 6px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.mat-switch button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.mat-switch button.on { background: var(--ink); color: var(--paper); }
+.top-switch { display: none; }
 #col { min-width: 0; }
 #main { padding: 28px 0 80px; outline: none; }
 .enter { animation: enter .24s ease-out; }
@@ -520,6 +525,8 @@ tbody tr:last-child > * { border-bottom: 0; }
 @media (max-width: 900px) {
   #shell { grid-template-columns: minmax(0, 1fr); }
   #rail { display: none; }
+  .top-switch:not([hidden]) { display: block; padding: 10px 16px 0; }
+  .top-switch .mat-switch { max-width: 420px; }
   #topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; position: sticky; top: 0; z-index: 40; background: var(--paper); border-bottom: 1.5px solid var(--ink); }
   #topbar .brand b { font-size: 1rem; }
   #topbar .icon-btn { width: 38px; height: 38px; }

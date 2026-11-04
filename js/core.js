@@ -28,9 +28,10 @@
   const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
   const dayKey = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   const chap = id => DATA.chapters.find(c => c.id === id);
+  DATA.trees = DATA.trees.filter(t => chap(t.ch)); // schémas de la matière choisie
 
   /* ---------- Stockage ---------- */
-  const KEY = 'droit-des-biens.v1';
+  const KEY = SITE.key || 'droit-des-biens.v1';
   const fresh = () => ({ name: '', xp: 0, items: {}, days: {}, streak: 0, best: 0, last: '', read: {}, badges: {}, flags: {}, stats: { answered: 0, correct: 0, cards: 0 }, exam: [], blitz: 0, examDate: '', cas: {}, cq: {}, prefs: { chapters: [], dark: null } });
   let S;
   try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { S = fresh(); }
@@ -59,10 +60,8 @@
   }
   const globalMastery = () => mean(DATA.chapters.map(c => mastery(c.id)));
   function state(p) {
-    if (p < .2) return { k: 0, name: 'Détenu', fem: 'Détenue', line: 'Tu le détiens : il faut encore l\'apprivoiser.' };
-    if (p < .5) return { k: 1, name: 'Possédé', fem: 'Possédée', line: 'Tu le possèdes : corpus ok, il manque l\'animus.' };
-    if (p < .8) return { k: 2, name: 'Usucapé', fem: 'Usucapée', line: 'Presque à toi : encore un peu de temps.' };
-    return { k: 3, name: 'Propriété', fem: 'Propriété', line: 'Propriétaire : il est à toi.' };
+    const k = p < .2 ? 0 : p < .5 ? 1 : p < .8 ? 2 : 3;
+    return Object.assign({ k }, SITE.states[k]);
   }
   function dueItems(list) { const now = Date.now(); return list.filter(x => { const it = S.items[x.id]; return it && it.d <= now; }); }
   function pickSmart(list, n) {
@@ -72,7 +71,7 @@
   }
 
   /* ---------- XP, niveaux, série ---------- */
-  const TITLES = ['Détentrice précaire', 'Possesseure', 'Possesseure de bonne foi', 'Usucapante', 'Propriétaire', 'Propriétaire exclusive', 'Notaire', 'Magistrate', 'Conseillère à la Cour de cassation', 'Doyenne de la faculté'];
+  const TITLES = SITE.titles;
   const levelOf = xp => Math.floor(Math.sqrt(xp / 40)) + 1;
   const levelFloor = l => 40 * (l - 1) * (l - 1);
   const titleOf = l => TITLES[Math.min(l, TITLES.length) - 1];
@@ -112,7 +111,7 @@
     { id: 'st7', n: 'Semaine pleine', d: 'Réviser 7 jours de suite', t: () => S.best >= 7 },
     { id: 'perfect', n: 'Sans faute', d: 'Finir un quiz sans erreur', t: () => !!S.flags.perfect },
     { id: 'cards50', n: 'Fichiste', d: 'Retourner 50 flashcards', t: () => S.stats.cards >= 50 },
-    { id: 'read', n: 'Lectrice', d: 'Relire les 5 fiches', t: () => DATA.chapters.every(c => S.read[c.id]) },
+    { id: 'read', n: 'Lectrice', d: 'Relire les ' + DATA.chapters.length + ' fiches', t: () => DATA.chapters.every(c => S.read[c.id]) },
     { id: 'cas', n: 'Jurisconsulte', d: 'Réussir 3 cas pratiques', t: () => Object.values(S.cas).filter(v => v >= .75).length >= 3 },
     { id: 'blitz', n: 'Éclair', d: '15 bonnes réponses en blitz', t: () => S.blitz >= 15 },
     { id: 'owner', n: 'Propriétaire d\'un chapitre', d: 'Maîtriser un chapitre à 80 %', t: () => DATA.chapters.some(c => mastery(c.id) >= .8) },

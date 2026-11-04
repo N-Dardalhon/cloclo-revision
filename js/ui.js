@@ -95,18 +95,36 @@
   }
 
   /* ---------- Carte cadastrale ---------- */
+  // Découpage générique en rangées de parcelles irrégulières (pour n'importe quel nombre de chapitres)
+  function gridParcels(chs) {
+    const n = chs.length, rows = Math.max(1, Math.ceil(Math.sqrt(n / 1.6))), W = 640, rowH = 170, H = rows * rowH;
+    let seed = 7; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    // lignes horizontales légèrement penchées : y(x) = a + (b - a) * x / W
+    const lines = Array.from({ length: rows + 1 }, (_, r) => { if (r === 0) return [0, 0]; if (r === rows) return [H, H]; const y = r * rowH; return [y + (rnd() - .5) * 40, y + (rnd() - .5) * 40]; });
+    const yAt = (r, x) => lines[r][0] + (lines[r][1] - lines[r][0]) * x / W;
+    const polys = {}; let k = 0;
+    for (let r = 0; r < rows; r++) {
+      const cnt = Math.round((n - k) / (rows - r)), xsT = [0], xsB = [0];
+      for (let i = 1; i < cnt; i++) { const x = i * W / cnt; xsT.push(x + (rnd() - .5) * 60); xsB.push(x + (rnd() - .5) * 60); }
+      xsT.push(W); xsB.push(W);
+      for (let i = 0; i < cnt; i++, k++) polys[chs[k].id] = [[xsT[i], yAt(r, xsT[i])], [xsT[i + 1], yAt(r, xsT[i + 1])], [xsB[i + 1], yAt(r + 1, xsB[i + 1])], [xsB[i], yAt(r + 1, xsB[i])]];
+    }
+    return { polys, H };
+  }
   function parcelMap(onGo) {
     const T = [[0, 0], [214, 0], [430, 0], [640, 0]];
     const M = [[0, 190], [204, 172], [446, 206], [640, 178]];
     const Sp = [318, 198], B = [[0, 400], [286, 400], [640, 400]];
-    const polys = {
+    let polys = {
       c1: [T[0], T[1], M[1], M[0]],
       c2: [T[1], T[2], M[2], Sp, M[1]],
       c3: [T[2], T[3], M[3], M[2]],
       c4: [M[0], M[1], Sp, B[1], B[0]],
       c5: [Sp, M[2], M[3], B[2], B[1]]
     };
-    const root = svg('svg', { viewBox: '-8 -8 656 416', class: 'map', role: 'group', 'aria-label': 'Plan cadastral du cours : une parcelle par chapitre' });
+    let H = 400;
+    if (!DATA.chapters.every(c => polys[c.id])) { const g = gridParcels(DATA.chapters); polys = g.polys; H = g.H; }
+    const root = svg('svg', { viewBox: `-8 -8 656 ${H + 16}`, class: 'map', role: 'group', 'aria-label': 'Plan cadastral du cours : une parcelle par chapitre' });
     const defs = svg('defs');
     defs.append(svg('pattern', { id: 'hatch', width: 8, height: 8, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, svg('rect', { width: 8, height: 8, class: 'hatch-bg' }), svg('line', { x1: 0, y1: 0, x2: 0, y2: 8, class: 'hatch-line' })));
     root.append(defs);

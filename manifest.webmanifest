@@ -1,7 +1,7 @@
 {
-  "name": "Droit des biens · révisions L3",
-  "short_name": "Droit des biens",
-  "description": "Fiches, flashcards, quiz et cas pratiques pour réviser le droit des biens.",
+  "name": "Révisions L3 · biens et contrats spéciaux",
+  "short_name": "Révisions L3",
+  "description": "Fiches, flashcards, quiz et cas pratiques pour réviser le droit des biens et les contrats spéciaux.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
