@@ -4,9 +4,36 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
-  const plain = s => String(s).replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
   const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  /* ---------- Lexique : définitions affichées au survol des mots en gras ---------- */
+  // Clé de recherche : sans accents, sans article, sans pluriel simple (« les vices cachés » = « Vice caché »)
+  const lexKey = s => norm(s).replace(/\([^)]*\)/g, ' ').replace(/[’']/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim()
+    .replace(/^(le|la|l|les|un|une|des|du|de|d) /, '')
+    .split(' ').map(w => w.length > 3 && /[sx]$/.test(w) ? w.slice(0, -1) : w).join(' ');
+  let LEX = null;
+  function lexicon() {
+    if (LEX) return LEX;
+    LEX = new Map();
+    const put = (term, def, ch, alias) => {
+      if (!term || !def) return;
+      [term].concat(alias || []).forEach(t => { const k = lexKey(t); if (k && !LEX.has(k)) LEX.set(k, { term: String(term), def, ch }); });
+    };
+    const fromChapter = (id, o) => {
+      (o.gloss || []).forEach(g => put(g[0], g[1], id));
+      (o.fiche || []).forEach(b => { if (b[0] === 'def') put(b[1], b[2], id); });
+    };
+    const mine = new Set(DATA.chapters.map(c => c.id));
+    Object.keys(DATA.all).filter(id => mine.has(id)).forEach(id => fromChapter(id, DATA.all[id])); // la matière en cours d'abord
+    (window.LEXIQUE || []).forEach(x => put(x[0], x[1], null, x[2]));
+    Object.keys(DATA.all).filter(id => !mine.has(id)).forEach(id => fromChapter(id, DATA.all[id]));
+    return LEX;
+  }
+  const lookup = s => lexicon().get(lexKey(String(s).replace(/<[^>]+>/g, ''))) || null;
+  const md = (s, noLex) => esc(s)
+    .replace(/\*\*(.+?)\*\*/g, (m, t) => !noLex && lookup(t) ? '<strong class="gl" data-gl="' + esc(lexKey(t)) + '">' + t + '</strong>' : '<strong>' + t + '</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  const plain = s => String(s).replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
 
   function h(tag, a, ...kids) {
     const el = document.createElement(tag);
@@ -132,7 +159,7 @@
   const onKey = f => keyFns.push(f);
   const clearKeys = () => { keyFns = []; };
 
-  window.U = { $, $$, h, add, esc, md, plain, norm, shuffle, sample, mean, dayKey, chap };
+  window.U = { $, $$, h, add, esc, md, plain, norm, lookup, lexKey, lexicon, shuffle, sample, mean, dayKey, chap };
   window.ST = {
     get S() { return S; }, save, grade, mastery, globalMastery, state, dueItems, pickSmart, masteryKinds,
     gain, levelOf, levelFloor, titleOf, currentStreak, BADGES, checkBadges, onKey, clearKeys,

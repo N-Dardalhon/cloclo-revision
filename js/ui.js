@@ -214,5 +214,62 @@
       h('div', { class: 'sbar-n' }, extra || `${Math.min(i + 1, n)}/${n}`));
   }
 
+  /* ---------- Infobulle de définition sur les mots en gras ---------- */
+  // Désactivée là où elle donnerait la réponse (questions, propositions, recto des cartes…)
+  const NO_TIP = '.opt, .q, .recto, .vf-s, .m-item, summary, button, .b-line, .facts';
+  const tipAllowed = el => !el.closest(NO_TIP);
+  let tip = null, tipFor = null, showT = 0, hideT = 0;
+  function hideTip() {
+    clearTimeout(showT); clearTimeout(hideT);
+    if (tip) tip.remove();
+    if (tipFor) tipFor.classList.remove('gl-on');
+    tip = tipFor = null;
+  }
+  function showTip(el) {
+    const g = U.lexicon().get(el.dataset.gl); if (!g) return;
+    if (tipFor === el) return;
+    hideTip();
+    const c = g.ch && chap(g.ch);
+    const inGloss = DATA.gloss.some(x => U.lexKey(x.term) === el.dataset.gl);
+    tip = h('div', { class: 'gl-tip', role: 'tooltip', id: 'gl-tip', onmouseenter() { clearTimeout(hideT); }, onmouseleave: () => { hideT = setTimeout(hideTip, 220); } },
+      h('div', { class: 'gl-tip-top' }, h('b', null, g.term), c ? h('span', { class: 'tag', style: { '--c': c.col } }, h('i'), 'Ch. ' + c.n) : null),
+      h('p', { html: U.md(g.def, true) }),
+      (c || inGloss) ? h('div', { class: 'gl-tip-links' },
+        c ? h('a', { href: '#/fiche/' + c.id, onclick: hideTip }, 'Fiche du chapitre ' + c.n) : null,
+        inGloss ? h('a', { href: '#/glossaire/' + encodeURIComponent(g.term), onclick: hideTip }, 'Glossaire') : null) : null);
+    document.body.append(tip);
+    tipFor = el; el.classList.add('gl-on'); el.setAttribute('aria-describedby', 'gl-tip');
+    // placement : au-dessus du mot, en dessous s'il n'y a pas la place
+    const r = el.getClientRects()[0] || el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight, m = 10;
+    let x = r.left + r.width / 2 - tw / 2;
+    x = Math.max(m, Math.min(x, innerWidth - tw - m));
+    const above = r.top - th - 10 > m;
+    const y = above ? r.top - th - 10 : r.bottom + 10;
+    tip.classList.add(above ? 'above' : 'below');
+    tip.style.left = (x + scrollX) + 'px'; tip.style.top = (y + scrollY) + 'px';
+    tip.style.setProperty('--ax', Math.max(14, Math.min(tw - 14, r.left + r.width / 2 - x)) + 'px');
+  }
+  const glOf = t => { const el = t && t.closest && t.closest('.gl'); return el && tipAllowed(el) ? el : null; };
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+  document.addEventListener('mouseover', e => {
+    if (!finePointer.matches) return;
+    const el = glOf(e.target);
+    if (el) { clearTimeout(hideT); if (el !== tipFor) { clearTimeout(showT); showT = setTimeout(() => showTip(el), 180); } }
+  });
+  document.addEventListener('mouseout', e => {
+    if (!finePointer.matches) return;
+    const el = glOf(e.target);
+    if (el && !el.contains(e.relatedTarget)) { clearTimeout(showT); if (tipFor === el) hideT = setTimeout(hideTip, 220); }
+  });
+  document.addEventListener('click', e => { // tactile : un tap ouvre, un second tap ou un tap ailleurs ferme
+    const el = glOf(e.target);
+    if (el) { e.preventDefault(); tipFor === el ? hideTip() : showTip(el); return; }
+    if (tip && !tip.contains(e.target)) hideTip();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && tip) hideTip(); });
+  addEventListener('hashchange', hideTip);
+  let lastW = innerWidth; // sur mobile, la barre d'adresse change la hauteur : on ne ferme que si la largeur change
+  addEventListener('resize', () => { if (innerWidth !== lastW) { lastW = innerWidth; hideTip(); } });
+
   window.UI = { svg, icon, toast, confetti, stamp, ring, parcelMap, chapterPicker, modal, sessionBar };
 })();

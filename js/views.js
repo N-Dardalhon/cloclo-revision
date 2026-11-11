@@ -119,14 +119,24 @@
       h('footer', { class: 'fiche-foot' }, readBtn,
         h('div', { class: 'row-actions' }, h('a', { class: 'btn', href: '#/cartes', onclick() { only(c.id); } }, icon('cards', 16), 'Flashcards du chapitre'), h('a', { class: 'btn', href: '#/quiz', onclick() { only(c.id); } }, icon('quiz', 16), 'Quiz du chapitre')),
         h('div', { class: 'pager' }, prev ? h('a', { href: '#/fiche/' + prev.id }, icon('left', 16), 'Ch. ' + prev.n + ' · ' + prev.short) : h('span'), next ? h('a', { href: '#/fiche/' + next.id }, 'Ch. ' + next.n + ' · ' + next.short, icon('right', 16)) : null))));
+    // Reprendre la lecture là où elle s'était arrêtée + bouton « haut de page »
+    const posKey = 'cloclo.pos.' + c.id;
+    let saved = 0; try { saved = +localStorage.getItem(posKey) || 0; } catch (e) { }
+    const topBtn = h('button', { class: 'to-top', type: 'button', 'aria-label': 'Revenir en haut de la fiche', title: 'Haut de page', onclick() { scrollTo({ top: 0, behavior: 'smooth' }); } }, icon('left', 18));
+    const resume = saved > 600 ? h('button', { class: 'resume', type: 'button', onclick() { scrollTo({ top: saved, behavior: 'smooth' }); resume.remove(); } }, icon('book', 16), 'Reprendre la lecture', h('span', { class: 'resume-x', role: 'button', 'aria-label': 'Ignorer', onclick(e) { e.stopPropagation(); resume.remove(); } }, icon('x', 14))) : null;
+    document.body.append(topBtn); if (resume) { document.body.append(resume); setTimeout(() => resume.isConnected && resume.remove(), 9000); }
+    let saveT = 0;
     function onScroll() {
       const d = document.documentElement, p = d.scrollTop / Math.max(1, d.scrollHeight - d.clientHeight);
       prog.firstChild.style.width = (p * 100) + '%';
+      topBtn.classList.toggle('show', d.scrollTop > 900);
+      if (resume && d.scrollTop > 300) resume.remove();
+      if (d.scrollTop > 300) { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(posKey, p > .97 ? 0 : Math.round(d.scrollTop)); } catch (e) { } }, 400); }
       let cur = null; toc.forEach(t => { const el = document.getElementById(t.id); if (el && el.getBoundingClientRect().top < 140) cur = t.id; });
       side.querySelectorAll('a').forEach(a => a.classList.toggle('cur', a.dataset.id === cur));
     }
     addEventListener('scroll', onScroll, { passive: true }); onScroll();
-    return () => removeEventListener('scroll', onScroll);
+    return () => { removeEventListener('scroll', onScroll); clearTimeout(saveT); topBtn.remove(); resume && resume.remove(); };
   }
 
   /* ================= COURS (hub) ================= */
@@ -165,9 +175,10 @@
   }
 
   /* ================= GLOSSAIRE ================= */
-  function glossaire(box) {
-    let q = '', ch = null;
-    const input = h('input', { type: 'search', class: 'field', placeholder: 'Chercher un terme ou une définition', 'aria-label': 'Chercher dans le glossaire', oninput(e) { q = norm(e.target.value); paint(); } });
+  function glossaire(box, args) {
+    const start = (args && args[0]) || ''; // lien direct depuis une infobulle : #/glossaire/<terme>
+    let q = norm(start), ch = null;
+    const input = h('input', { type: 'search', class: 'field', value: start, placeholder: 'Chercher un terme ou une définition', 'aria-label': 'Chercher dans le glossaire', oninput(e) { q = norm(e.target.value); paint(); } });
     const chips = h('div', { class: 'chips' }, h('button', { type: 'button', class: 'chip on', onclick: e => setCh(null, e) }, 'Tous'), DATA.chapters.map(c => h('button', { type: 'button', class: 'chip', style: { '--c': c.col }, onclick: e => setCh(c.id, e) }, h('i'), 'Ch. ' + c.n)));
     function setCh(id, e) { ch = id; [...chips.children].forEach(x => x.classList.remove('on')); e.currentTarget.classList.add('on'); paint(); }
     const out = h('div', { class: 'gloss' });
