@@ -31,7 +31,7 @@
       h('div', { class: 'hero-text' },
         h('h1', null, name ? `${hello} ${name}.` : 'Ton cours de ' + SITE.title.toLowerCase() + ', en parcelles.'),
         h('p', { class: 'lede' }, mission),
-        h('div', { class: 'row-actions' }, cta, h('a', { class: 'btn', href: '#/jouer' }, 'Tous les jeux')),
+        h('div', { class: 'row-actions' }, cta, h('a', { class: 'btn', href: '#/epreuves' }, 'S\'entraîner au partiel'), h('a', { class: 'btn', href: '#/jouer' }, 'Tous les jeux')),
         h('dl', { class: 'quick-stats' },
           h('div', null, h('dt', null, 'Série'), h('dd', null, ST.currentStreak() + (ST.currentStreak() > 1 ? ' jours' : ' jour'))),
           h('div', null, h('dt', null, 'XP'), h('dd', null, S().xp)),
@@ -148,7 +148,9 @@
   /* ================= JOUER (hub) ================= */
   function jouer(box) {
     const dueC = ST.dueItems(DATA.cards).length, dueQ = ST.dueItems(DATA.qcm).length;
+    const nEp = ((window.EPREUVES || {})[SITE.matiere] || { sujets: [] }).sujets.length;
     const g = [
+      ['gavel', 'Épreuves type partiel', 'Dissertations, commentaires, cas : analyse du sujet, plan, corrigé. Avec des thèmes hors cours.', '#/epreuves', nEp + ' sujets'],
       ['cards', 'Flashcards', 'Retourne, évalue-toi, reviens au bon moment.', '#/cartes', dueC ? dueC + ' à revoir' : DATA.cards.length + ' cartes'],
       ['quiz', 'Quiz', 'Questions à choix multiple, avec explication.', '#/quiz', dueQ ? dueQ + ' à revoir' : DATA.qcm.length + ' questions'],
       ['bolt', 'Vrai ou faux', 'Série ou blitz de 60 secondes.', '#/vf', 'Record : ' + S().blitz],
@@ -158,7 +160,7 @@
       ['list', 'Questions de cours', 'Rédige, compare, auto-évalue.', '#/questions', DATA.coursq.length + ' sujets'],
       ['clock', 'Examen blanc', '20 questions, un chrono, une note.', '#/examen', S().exam.length ? 'Dernier : ' + S().exam[S().exam.length - 1].score + '/20' : 'Jamais tenté']
     ];
-    box.replaceChildren(h('div', { class: 'wrap' }, head('Jouer', 'Huit façons de réviser. Alterne : ton cerveau retient mieux quand le format change.'),
+    box.replaceChildren(h('div', { class: 'wrap' }, head('Jouer', 'Neuf façons de réviser. Alterne : ton cerveau retient mieux quand le format change.'),
       h('div', { class: 'tiles big' }, g.map(t => h('a', { class: 'tile', href: t[3] }, h('span', { class: 'tile-i' }, icon(t[0], 24)), h('b', null, t[1]), h('small', null, t[2]), h('em', null, t[4]))))));
   }
 

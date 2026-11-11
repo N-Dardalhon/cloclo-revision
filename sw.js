@@ -1,5 +1,5 @@
 /* Cache réseau d'abord : le site fonctionne hors ligne après une première visite. */
-const CACHE = 'cloclo-revision-v5';
+const CACHE = 'cloclo-revision-v6';
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));

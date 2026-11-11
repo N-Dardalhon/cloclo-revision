@@ -32,7 +32,7 @@
 
   /* ---------- Stockage ---------- */
   const KEY = SITE.key || 'droit-des-biens.v1';
-  const fresh = () => ({ name: '', xp: 0, items: {}, days: {}, streak: 0, best: 0, last: '', read: {}, badges: {}, flags: {}, stats: { answered: 0, correct: 0, cards: 0 }, exam: [], blitz: 0, examDate: '', cas: {}, cq: {}, prefs: { chapters: [], dark: null } });
+  const fresh = () => ({ name: '', xp: 0, items: {}, days: {}, streak: 0, best: 0, last: '', read: {}, badges: {}, flags: {}, stats: { answered: 0, correct: 0, cards: 0 }, exam: [], blitz: 0, examDate: '', cas: {}, cq: {}, ep: {}, prefs: { chapters: [], dark: null } });
   let S;
   try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { S = fresh(); }
   if (!S.examDate && window.SITE && SITE.exam) S.examDate = SITE.exam;

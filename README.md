@@ -12,6 +12,9 @@ Un sélecteur (en haut du menu) permet de passer d'une matière à l'autre. Chaq
 - **Droit des biens** : `js/data/c1.js` … `c5.js`, schémas dans `js/data/trees.js`.
 - **Contrats spéciaux (la vente)** : `js/data/v1.js` … `v9.js`, schémas dans `js/data/trees-vente.js`.
 
+## Épreuves type partiel
+Page Jouer → *Épreuves type partiel* : dissertations, commentaires, cas pratiques et questions, dont beaucoup **hors du cours** (servitudes, usufruit, indivision, vices cachés, droit de la consommation, CVIM…). Chaque sujet : analyse guidée du sujet (anti hors-sujet), kit de survie, plan corrigé, points attendus. Aussi : méthode anti hors-sujet et exercice « Lire un sujet ». Données : `js/data/epreuves-biens.js` et `js/data/epreuves-vente.js`.
+
 ## Personnaliser
 - Matières, chapitres, prénom et dates de partiel : `MATIERES` et `SITE` dans `js/data/core.js`.
 - Date du partiel : page Progrès → Réglages.

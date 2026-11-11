@@ -13,12 +13,13 @@
   ];
   const GROUP = {
     '': '', home: '', cours: 'cours', chapitre: 'cours', fiche: 'cours', glossaire: 'cours', schemas: 'cours', chiffres: 'cours', jurisprudence: 'cours',
-    jouer: 'jouer', quiz: 'jouer', cartes: 'jouer', vf: 'jouer', articles: 'jouer', associer: 'jouer', cas: 'jouer', questions: 'jouer', examen: 'jouer', progres: 'progres'
+    jouer: 'jouer', quiz: 'jouer', cartes: 'jouer', vf: 'jouer', articles: 'jouer', associer: 'jouer', cas: 'jouer', questions: 'jouer', examen: 'jouer', epreuves: 'jouer', methode: 'jouer', lecture: 'jouer', kits: 'jouer', progres: 'progres'
   };
   const ROUTES = {
     '': Views.home, home: Views.home, cours: Views.cours, chapitre: Views.chapitre, fiche: Views.fiche, jouer: Views.jouer, glossaire: Views.glossaire,
     chiffres: Views.chiffres, jurisprudence: Views.jurisprudence, schemas: Views.schemas, progres: Views.progres,
-    quiz: Games.quiz, cartes: Games.cartes, vf: Games.vf, articles: Games.articles, associer: Games.associer, cas: Games.cas, questions: Games.questions, examen: Games.examen, cerveau: Brain.view
+    quiz: Games.quiz, cartes: Games.cartes, vf: Games.vf, articles: Games.articles, associer: Games.associer, cas: Games.cas, questions: Games.questions, examen: Games.examen, cerveau: Brain.view,
+    epreuves: Epreuves.hub, methode: Epreuves.methode, lecture: Epreuves.lecture, kits: Epreuves.kits
   };
 
   document.documentElement.dataset.matiere = SITE.matiere;
