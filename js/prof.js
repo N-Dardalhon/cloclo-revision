@@ -419,7 +419,10 @@
       const G = gather(t.term, q), steps = [], blocks = [];
       steps.push({ t: 'Je repère la notion : **' + t.term + '**' + (t.fixed ? ' (j\'ai corrigé l\'orthographe)' : '') + (t.ch ? ' — ' + chLabel(t.ch) : ''), docs: G.strong.slice(0, 6) });
       const want = it.all;
-      const art = G.arts[0], arr = G.arrets[0], trap = G.traps[0];
+      const part = !['conditions', 'effects', 'why', 'example'].includes(it.main) && partFor(t.term, t.ch);
+      // avec une partie de cours affichée, on ne garde que les textes et arrêts qu'elle cite (pas de hors-sujet)
+      const inPart = d => { if (!part || !d) return true; const pt = norm(part.text), lab = d.kind === 'Article' ? artLabel(d) : arrLabel(d); const date = norm(lab).match(/\d{1,2}(er)? [a-z]+\.? \d{4}/); return date ? pt.includes(date[0]) : refsOf(lab).some(r => new RegExp('\\b' + r + '\\b').test(pt)); };
+      const art = G.arts.find(inPart) || (part ? null : G.arts[0]), arr = part ? G.arrets.find(d => inPart(d)) : G.arrets[0], trap = G.traps[0];
       if (art) steps.push({ t: 'Je cherche le texte : **' + artLabel(art) + '**', docs: [art] });
       if (arr) steps.push({ t: 'Je vérifie la jurisprudence : *' + arrLabel(arr) + '*', docs: [arr] });
       if (trap) steps.push({ t: 'Je regarde où les étudiants se trompent', docs: [trap] });
@@ -436,6 +439,11 @@
         blocks.push(['h', 'Les effets, le régime']); ef.length ? ef.forEach(d => blocks.push(['p', d.body])) : blocks.push(['p', 'Rien de spécifique dans ton cours sur ce point.']);
       }
       if (art && !(want.includes('arret') && !want.includes('article'))) blocks.push(['rule', art.body, artLabel(art)]);
+      if (part) {
+        steps.push({ t: 'J\'ouvre ta fiche : **' + part.c.short + '**, partie « ' + part.x.title + ' »' });
+        blocks.push(['h', 'Ce que dit ton cours · ' + part.x.title]);
+        part.parts.forEach((x, j) => { if (j) blocks.push(['h', x.title]); x.blocks.map(fblock).filter(Boolean).slice(0, 10).forEach(b => blocks.push(b)); });
+      }
       if (arr) blocks.push(['p', '**Jurisprudence.** ' + arrText(arr)]);
       if (want.includes('why') || it.main === 'why') { const w = G.why.find(d => d !== art && d !== arr); blocks.push(['h', 'Pourquoi ?']); blocks.push(['p', w ? w.body : 'Ton cours ne donne pas de justification explicite. Raisonne sur le but de la règle : qui protège-t-elle, et contre quoi ?']); }
       if (want.includes('example') || it.main === 'example') { const e = G.ex[0]; blocks.push(['h', 'Un exemple']); blocks.push(['p', e ? e.body : 'Pas d\'exemple tout fait dans ton cours ; je t\'en propose un en cas pratique si tu veux.']); }
@@ -450,8 +458,28 @@
       const q2 = asks(G.strong.length ? G.strong : G.pool)[0];
       return {
         steps, blocks, speak: G.def ? t.term + ' : ' + firstSentence(G.def) : '',
-        chips: [q2 && { label: 'Interroge-moi dessus', fn: () => quiz(t) }, { label: 'Un exemple', q: 'un exemple de ' + t.term }, { label: 'Pourquoi ?', q: 'pourquoi ' + t.term }, related[0] && { label: 'Différence avec « ' + related[0].term + ' »', q: 'différence entre ' + t.term + ' et ' + related[0].term }, { label: 'Plus simple', q: 'explique plus simplement ' + t.term }]
+        chips: [part && { label: 'Fais-moi cours à partir de là', fn: () => lessonStart(part.ch, part.i) }, q2 && { label: 'Interroge-moi dessus', fn: () => quiz(t) }, { label: 'Un exemple', q: 'un exemple de ' + t.term }, { label: 'Pourquoi ?', q: 'pourquoi ' + t.term }, related[0] && { label: 'Différence avec « ' + related[0].term + ' »', q: 'différence entre ' + t.term + ' et ' + related[0].term }, { label: 'Plus simple', q: 'explique plus simplement ' + t.term }]
       };
+    }
+    // La partie de fiche qui traite le mieux une notion (pour dérouler le cours, pas une ligne).
+    // Un titre qui porte précisément sur la notion l'emporte ; si la partie est courte, on y joint la suivante.
+    function partFor(term, prefCh) {
+      const k = norm(term).replace(/[’']/g, ' ');
+      let best = null, bs = 0;
+      MATIERES.forEach(M => M.chapters.forEach(c => (lessonsOf(c.id) || []).forEach((x, i) => {
+        const core = norm(x.head).replace(/[’']/g, ' ').split(/ — | · /).filter(z => z.includes(k)).pop() || '';
+        const txt = norm(x.text).replace(/[’']/g, ' '), occ = txt.split(k).length - 1;
+        if (!occ && !core) return;
+        let sc = (core ? 14 * k.length / core.replace(/^(§\d+|[a-z0-9]{1,2}\.)\s*/, '').length : 0) + Math.min(occ, 5) * 1.5;
+        if (x.blocks.some(b => b[0] === 'def' && norm(plain(b[1])).replace(/[’']/g, ' ') === k)) sc += 10; // la partie qui définit la notion
+        if (prefCh && c.id === prefCh) sc += 3 - Math.min(i, 5) * 0.3;
+        if (sc > bs) { bs = sc; best = { ch: c.id, i, c }; }
+      })));
+      if (!best || bs < 4) return null;
+      const seqs = lessonsOf(best.ch), parts = [seqs[best.i]];
+      let len = parts[0].text.length;
+      for (let j = best.i + 1; j < seqs.length && len < 900 && parts.length < 3; j++) { parts.push(seqs[j]); len += seqs[j].text.length; }
+      return Object.assign(best, { x: parts[0], parts, text: parts.map(p => p.title + ' : ' + p.text).join('\n') });
     }
     function relatedConcepts(t, G) {
       const seen = new Set([t.key]), out = [];
@@ -734,6 +762,8 @@
       if (!found.length && conv.topic && toks(q).length <= 4 && !sc) { query += ' ' + conv.topic.term; found = [conv.topic]; }
       if (found.length) { setTopic(found[0]); steps.push({ t: 'Je repère ' + found.slice(0, 3).map(t => '**' + t.term + '**' + (t.fixed ? ' (orthographe corrigée)' : '')).join(', ') }); }
       found.slice(0, 3).forEach(t => { const e = U.lookup(t.term); if (e && e.def) put('DÉFINITION — ' + t.term + ' : ' + plain(e.def)); });
+      const part = !sc && found[0] && partFor(found[0].term, found[0].ch);
+      if (part) { put('SA FICHE (' + part.c.short + ' · ' + part.x.title + ') : ' + plain(part.text).slice(0, 1400)); steps.push({ t: 'J\'ouvre sa fiche : **' + part.c.short + '**, partie « ' + part.x.title + ' »' }); }
       const refs = refsOf(q);
       const hits = uniqBy(idx.search(query, sc ? 6 : 12, d => d.kind !== 'Épreuve'), d => d.id);
       const extra = refs.length ? docs.filter(d => d.kind === 'Article' && refs.some(r => (d.ref + ' ' + d.title + ' ' + d.body).includes(r))).slice(0, 2) : [];
