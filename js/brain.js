@@ -1,7 +1,7 @@
 /* Le cerveau caché.
    Tout le cours (les deux matières) forme un cerveau en 3D, dessiné comme une planche
    d'anatomie gravée au pointillé. Chaque carte, article, arrêt ou définition est un neurone.
-   Modes : explorer, demander (recherche locale), récital (voix), interro (voix + micro).
+   Modes : explorer, le prof (tuteur qui raisonne, voir prof.js), récital (voix), interro (voix + micro).
    Accès uniquement par easter egg : taper « cerveau », code Konami, ou 7 taps sur le logo. */
 (function () {
   'use strict';
@@ -36,31 +36,7 @@
     });
     return items;
   }
-  const refsOf = s => { const out = new Set(); String(s).replace(/\bart(?:icles?|\.)?\s*(L\s?)?(\d{3,4}(?:-\d+)?)/gi, (_, l, n) => { out.add((l ? 'L' : '') + n); }); return [...out]; };
-
-  /* ================= Recherche locale (BM25) ================= */
-  const STOP = new Set(('le la les un une des de du d l a au aux et ou en dans par pour sur avec sans ce cet cette ces qui que quoi quel quelle quels quelles est sont c qu ne pas plus se sa son ses leur leurs il elle on nous vous ils elles je j tu me m te t moi toi y comment pourquoi quand combien dit dire faut peut etre avoir fait cest quest explique expliquer definition definir signifie veut veux sais savoir parle parler cours chose quoi entre lui leur dont donc car mais si tout tous toute toutes ca cela celui celle ceux').split(' '));
-  const stem = w => w.length > 5 ? w.replace(/(ements|ement|ations|ation|ites|ite|eurs|eur|euses|euse|ives|ive|ifs|if|ables|able|es|s|x|e)$/, '') : w.replace(/s$/, '');
-  const toks = s => norm(plain(String(s))).replace(/[^a-z0-9]+/g, ' ').split(' ').filter(w => w.length > 1 && !STOP.has(w)).map(stem);
-  function makeIndex(items) {
-    const docs = items.map(it => { const t = toks(it.title + ' ' + it.title + ' ' + it.body + ' ' + it.ref); const tf = new Map(); t.forEach(w => tf.set(w, (tf.get(w) || 0) + 1)); return { tf, len: t.length }; });
-    const df = new Map(); docs.forEach(d => d.tf.forEach((_, w) => df.set(w, (df.get(w) || 0) + 1)));
-    const avg = docs.reduce((a, d) => a + d.len, 0) / Math.max(1, docs.length), N = docs.length;
-    const boost = { 'Définition': 1.2, 'Carte': 1.15, 'Article': 1.1, 'Arrêt': 1.1, 'Question de cours': 1.05 };
-    return function search(q, n = 6) {
-      const qt = [...new Set(toks(q))]; if (!qt.length) return [];
-      const qrefs = refsOf(q.replace(/^(\d{3,4})$/, 'art. $1'));
-      const res = docs.map((d, i) => {
-        let s = 0;
-        qt.forEach(w => { const f = d.tf.get(w); if (!f) return; const idf = Math.log(1 + (N - df.get(w) + .5) / (df.get(w) + .5)); s += idf * f * 2.2 / (f + 1.2 * (.25 + .75 * d.len / avg)); });
-        const it = items[i];
-        if (qrefs.length && refsOf(it.ref + ' ' + it.title).some(r => qrefs.includes(r))) s += 6;
-        if (norm(q).includes(norm(it.title)) && it.title.length > 4) s += 3;
-        return [s * (boost[it.kind] || 1), i];
-      }).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, n);
-      return res.map(x => items[x[1]]);
-    };
-  }
+  const { refsOf, toks, keywords } = Prof.nlp;
 
   /* ================= Voix ================= */
   const synth = window.speechSynthesis;
@@ -107,14 +83,6 @@
     try { r.start(); } catch (e) { return null; }
     return r;
   }
-  function keywords(answer) {
-    const bold = [...String(answer).matchAll(/\*\*(.+?)\*\*/g)].map(m => m[1]);
-    let k = (bold.length ? bold.join(' ') : answer);
-    let w = [...new Set(toks(k))].filter(x => x.length > 3);
-    if (!bold.length) w = w.slice(0, 6);
-    return w.slice(0, 8);
-  }
-
   /* ================= Géométrie du cerveau ================= */
   function rng(seed) { return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
   const nrm = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
@@ -203,7 +171,7 @@
   /* ================= Vue ================= */
   function view(box) {
     if (!unlocked()) { location.hash = '#/'; return; }
-    const items = buildItems(), G = geometry(items), search = makeIndex(items);
+    const items = buildItems(), G = geometry(items);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dark = () => document.documentElement.dataset.theme === 'dark';
     document.body.classList.add('brain-on');
@@ -212,10 +180,12 @@
     const tip = h('div', { class: 'b-tip', hidden: true });
     const panel = h('aside', { class: 'b-panel', hidden: true, 'aria-live': 'polite' });
     const sub = h('div', { class: 'b-sub', hidden: true, 'aria-live': 'polite' });
-    const input = h('input', { class: 'b-ask', type: 'search', placeholder: 'Demande à ton cerveau… (ex : c\'est quoi un pacte de préférence ?)', 'aria-label': 'Poser une question au cours', enterkeyhint: 'search' });
+    const input = h('input', { class: 'b-ask', type: 'search', placeholder: 'Parle au prof… (une notion, une différence, un cas pratique)', 'aria-label': 'Poser une question au prof', enterkeyhint: 'search' });
     const micBtn = SR ? h('button', { class: 'b-ico', type: 'button', title: 'Dicter', 'aria-label': 'Dicter la question', onclick: dictate }, micSvg()) : null;
     const voiceBtn = h('button', { class: 'b-ico' + (voiceOn ? ' on' : ''), type: 'button', title: 'Voix', 'aria-label': 'Activer ou couper la voix', onclick() { voiceOn = !voiceOn; if (!voiceOn) stopVoice(); this.classList.toggle('on', voiceOn); this.replaceChildren(spkSvg(voiceOn)); } }, spkSvg(voiceOn));
     const modes = h('div', { class: 'b-modes' },
+      h('button', { type: 'button', class: 'b-mode prof', onclick: () => openChat() }, 'Le prof'),
+      h('button', { type: 'button', class: 'b-mode', onclick: () => { openChat(); prof.lesson(focusL ? focusL.ch : null); } }, 'Cours'),
       h('button', { type: 'button', class: 'b-mode', onclick: () => pickLobe('Récital', startRecital) }, 'Récital'),
       h('button', { type: 'button', class: 'b-mode', onclick: () => pickLobe('Interro', startInterro) }, 'Interro'),
       h('button', { type: 'button', class: 'b-mode ghost', onclick: resetView }, 'Vue d\'ensemble'));
@@ -227,6 +197,7 @@
     const head = h('header', { class: 'b-head' },
       h('div', null, h('p', { class: 'b-kicker' }, 'Planche I · pièce secrète'), h('h1', null, 'Le cerveau de ' + (ST.S.name || SITE.name || 'toi')), h('p', { class: 'b-cap' }, total + ' neurones, un par carte, article, arrêt ou définition. Les ponts dorés relient les articles communs aux deux cours.')),
       h('div', { class: 'b-tools' },
+        h('button', { class: 'b-ico', type: 'button', title: 'Réglages du prof', 'aria-label': 'Réglages du prof', onclick: openSettings }, gearSvg()),
         h('button', { class: 'b-ico', type: 'button', title: 'Planche claire ou sombre', 'aria-label': 'Changer de planche', onclick() { const d = document.documentElement; const nd = d.dataset.theme !== 'dark'; d.dataset.theme = nd ? 'dark' : 'light'; ST.S.prefs.dark = nd; ST.save(); } }, icon('moon', 18)),
         h('a', { class: 'b-ico', href: '#/', title: 'Quitter', 'aria-label': 'Quitter le cerveau' }, icon('x', 18))));
     const root = h('div', { class: 'brain' }, cv, head, legend, panel, sub, dock, tip);
@@ -400,7 +371,7 @@
     });
     const up = e => {
       const r = cv.getBoundingClientRect();
-      if (drag && drag.moved < 6 && ptrs.size <= 1) { const it = pick(e.clientX - r.left, e.clientY - r.top); if (it) openItem(it); else if (!busy()) closePanel(); }
+      if (drag && drag.moved < 6 && ptrs.size <= 1) { const it = pick(e.clientX - r.left, e.clientY - r.top); if (it) openItem(it); else if (!busy() && view !== 'chat') closePanel(); }
       ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = 0; if (!ptrs.size) drag = null;
     };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
@@ -416,7 +387,7 @@
     }
     function resetView() { stopAll(); closePanel(); hl = null; focusL = null; cam.ty = -1.05; cam.tp = -.22; cam.td = 3.5; }
     function focusLobe(L) { focusL = focusL === L ? null : L; hl = null; if (focusL) flyTo(L.c, 3.1); else cam.td = 3.5; }
-    function closePanel() { panel.hidden = true; sel = null; if (!mode) hl = null; }
+    function closePanel() { panel.hidden = true; panel.classList.remove('chat'); view = null; sel = null; if (!mode) hl = null; }
     const busy = () => !!mode;
 
     /* ---------- fiche d'un neurone ---------- */
@@ -425,34 +396,73 @@
       for (let k = 0; k < 6; k++) spawnPulse(it);
       const near = it.links.slice(0, 6);
       const open = it.gradable && DATA.fiche[it.ch] ? h('a', { class: 'b-link', href: '#/fiche/' + it.ch }, 'Ouvrir la fiche du chapitre') : null;
-      put(panel, 
+      view = 'item'; panel.classList.remove('chat');
+      put(panel,
         h('button', { class: 'b-x', type: 'button', 'aria-label': 'Fermer', onclick: closePanel }, icon('x', 16)),
+        chatStarted ? h('button', { type: 'button', class: 'b-back', onclick: () => openChat() }, '← Retour au prof') : null,
         h('p', { class: 'b-kind', style: { '--c': it.chap.col } }, h('i'), it.kind + ' · ' + it.mat.title + ' · ch. ' + it.chap.n),
         h('h2', { html: md(it.title) }),
         h('div', { class: 'b-body', html: md(it.body) }),
         it.ref ? h('p', { class: 'b-ref' }, it.ref) : null,
         h('div', { class: 'b-acts' },
-          h('button', { type: 'button', class: 'b-btn', onclick: () => say(it.title + '. ' + it.body) }, spkSvg(true), 'Lire à voix haute'), open),
+          h('button', { type: 'button', class: 'b-btn', onclick: () => { openChat(); prof.explainItem(it); } }, 'Demander au prof'),
+          h('button', { type: 'button', class: 'b-btn ghost', onclick: () => say(it.title + '. ' + it.body) }, spkSvg(true), 'Lire'), open),
         near.length ? h('div', { class: 'b-near' }, h('b', null, 'Neurones connectés'), near.map(n => h('button', { type: 'button', style: { '--c': n.chap.col }, onclick: () => openItem(n) }, h('i'), h('span', null, plain(n.title).slice(0, 70)), h('small', null, n.kind)))) : null,
         opts.extra || null);
       panel.hidden = false;
     }
 
-    /* ---------- demander ---------- */
+    /* ---------- le prof ---------- */
+    let view = null, chatStarted = false;
+    const prof = Prof.create(items, {
+      light(docs) {
+        const t = performance.now(), chs = new Set();
+        (docs || []).forEach((d, k) => {
+          if (d.p) { flash.set(d, { t: t + k * 140, c: d.chap.col }); spawnPulse(d); if (!hl) hl = new Set(); hl.add(d); }
+          else if (d.ch) chs.add(d.ch);
+        });
+        chs.forEach(ch => { const L = G.lobes.find(l => l.ch === ch); if (!L) return; for (let k = 0; k < 5; k++) { const n = L.nodes[Math.floor(Math.random() * L.nodes.length)]; if (n) { flash.set(n, { t: t + k * 120, c: L.chap.col }); spawnPulse(n); } } });
+        const first = (docs || []).find(d => d.p); if (first && view === 'chat') flyTo(first.p, Math.min(cam.td, 3.3));
+        clearTimeout(hlTimer); hlTimer = setTimeout(() => { if (!mode) hl = null; }, 6000);
+      },
+      focusChapter(ch) { const L = G.lobes.find(l => l.ch === ch); if (L) { focusL = L; flyTo(L.c, 3.1); setTimeout(() => { if (focusL === L && !mode) focusL = null; }, 5000); } },
+      openItem: it => openItem(it),
+      lobes: () => G.lobes,
+      say: t => say(t),
+      grade(it, res) { if (it.gradable) { ST.grade(it.id, res); ST.gain(res === 2 ? 8 : res === 1 ? 4 : 1); it.m = (ST.S.items[it.id].b || 0) / 5; } flash.set(it, { t: performance.now(), c: res === 2 ? '#2F8A5F' : res === 1 ? '#C99A2E' : '#B3293D' }); },
+      recital: L => startRecital(L),
+      interro: L => startInterro(L),
+      busy(b) { root.classList.toggle('b-thinking', b); }
+    });
+    let hlTimer = 0;
+    function openChat() {
+      if (mode) stopAll();
+      view = 'chat'; chatStarted = true; focusL = null;
+      panel.classList.add('chat');
+      put(panel,
+        h('div', { class: 'pf-top' },
+          h('p', { class: 'b-kind' }, h('i', { class: 'pf-dot' }), 'Le prof · ' + (Prof.Claude.ready() ? 'Claude' : 'moteur local')),
+          h('button', { type: 'button', class: 'b-x2', title: 'Nouvelle conversation', 'aria-label': 'Nouvelle conversation', onclick: () => prof.reset() }, icon('flip', 15)),
+          h('button', { type: 'button', class: 'b-x2', title: 'Réglages', 'aria-label': 'Réglages du prof', onclick: openSettings }, gearSvg()),
+          h('button', { type: 'button', class: 'b-x2', 'aria-label': 'Fermer', onclick: closePanel }, icon('x', 16))),
+        prof.el);
+      panel.hidden = false; prof.start(); setTimeout(() => { prof.el.scrollTop = prof.el.scrollHeight; }, 0);
+    }
+    function openSettings() {
+      stopAll(); view = 'settings'; panel.classList.remove('chat');
+      put(panel, h('button', { class: 'b-x', type: 'button', 'aria-label': 'Fermer', onclick: () => chatStarted ? openChat() : closePanel() }, icon('x', 16)), Prof.settings(() => { prof.reset(); openChat(); }));
+      panel.hidden = false;
+    }
     function ask(q) {
       q = (q || '').trim(); if (!q) return;
-      stopAll(); focusL = null;
-      const res = search(q, 7);
-      if (!res.length) { hl = new Set(); put(panel, h('button', { class: 'b-x', type: 'button', onclick: closePanel }, icon('x', 16)), h('p', { class: 'b-kind' }, 'Aucun neurone ne s\'allume'), h('h2', null, '« ' + q + ' »'), h('p', { class: 'b-body' }, 'Rien dans ton cours ne correspond à ces mots. Essaie avec un mot-clé (« réméré », « lésion », « art. 1583 »…).')); panel.hidden = false; say('Rien dans ton cours ne correspond.'); return; }
-      hl = new Set(res); const best = res[0];
-      openItem(best, { extra: h('div', { class: 'b-near' }, h('b', null, 'Autres passages qui répondent'), res.slice(1).map(n => h('button', { type: 'button', style: { '--c': n.chap.col }, onclick: () => openItem(n) }, h('i'), h('span', null, plain(n.title).slice(0, 70)), h('small', null, n.kind + ' · ' + n.mat.title)))) });
-      panel.querySelector('.b-kind').append(' — réponse de ton cours');
-      res.forEach((n, k) => setTimeout(() => flash.set(n, { t: performance.now(), c: n.chap.col }), k * 160));
-      say((best.answer || best.body));
+      if (mode) stopAll();
+      if (view !== 'chat') openChat();
+      input.value = '';
+      prof.ask(q);
     }
     function dictate() {
       stopVoice(); micBtn.classList.add('rec'); input.value = ''; input.placeholder = 'Je t\'écoute…';
-      const r = listen((t, fin) => { input.value = t; if (fin) ask(t); }, () => { micBtn.classList.remove('rec'); input.placeholder = 'Demande à ton cerveau…'; });
+      const r = listen((t, fin) => { input.value = t; if (fin) ask(t); }, () => { micBtn.classList.remove('rec'); input.placeholder = 'Parle au prof…'; });
       if (!r) micBtn.classList.remove('rec');
     }
 
@@ -525,17 +535,18 @@
         const said = h('p', { class: 'b-heard' });
         const mic = SR ? h('button', { type: 'button', class: 'b-btn', onclick() { stopVoice(); this.classList.add('rec'); this.textContent = 'Je t\'écoute…'; const self = this; rec = listen((t) => { heard = t; said.textContent = '« ' + t + ' »'; }, () => { self.classList.remove('rec'); self.textContent = 'Répondre au micro'; if (heard) reveal(); }); } }, 'Répondre au micro') : null;
         const show = h('button', { type: 'button', class: 'b-btn ghost', onclick: reveal }, 'Révéler la réponse');
-        put(sub, h('p', { class: 'b-subhead' }, 'Question ' + k + ' / ' + pool.length + ' · ' + it.chap.short), h('p', { class: 'b-line', html: md(it.ask) }), said, h('div', { class: 'b-ctrl' }, mic, show, h('button', { type: 'button', class: 'b-ico', 'aria-label': 'Arrêter', onclick: stopAll }, icon('x', 18))));
+        const typed = h('form', { class: 'b-typed', onsubmit(e) { e.preventDefault(); const v = this.firstChild.value.trim(); if (v) { heard = v; reveal(); } } }, h('input', { type: 'text', placeholder: 'Ou écris ta réponse, puis Entrée', 'aria-label': 'Ta réponse', enterkeyhint: 'send' }));
+        put(sub, h('p', { class: 'b-subhead' }, 'Question ' + k + ' / ' + pool.length + ' · ' + it.chap.short), h('p', { class: 'b-line', html: md(it.ask) }), said, typed, h('div', { class: 'b-ctrl' }, mic, show, h('button', { type: 'button', class: 'b-ico', 'aria-label': 'Arrêter', onclick: stopAll }, icon('x', 18))));
         sub.hidden = false;
         say(it.ask);
         let done = false;
         function reveal() {
           if (done) return; done = true; if (rec) { try { rec.stop(); } catch (e) { } rec = null; }
-          const kw = keywords(it.answer), got = heard ? toks(heard) : [], hit = kw.filter(w => got.some(g => g === w || (g.length > 4 && (g.startsWith(w) || w.startsWith(g)))));
+          const ev = heard ? Prof.nlp.gradeText(it, heard) : null, kw = keywords(it.answer), hit = ev ? ev.hit : [];
           const grade = res => { if (it.gradable) { ST.grade(it.id, res); ST.gain(res === 2 ? 8 : res === 1 ? 4 : 1); it.m = (ST.S.items[it.id].b || 0) / 5; } if (res === 2) score++; flash.set(it, { t: performance.now(), c: res === 2 ? '#2F8A5F' : res === 1 ? '#C99A2E' : '#B3293D' }); setTimeout(q, 500); };
           put(sub, h('p', { class: 'b-subhead' }, 'Réponse'), h('p', { class: 'b-line small', html: md(it.answer) }),
-            heard ? h('p', { class: 'b-heard' }, kw.length ? `Mots-clés cités : ${hit.length} / ${kw.length}` + (hit.length < kw.length ? ' (manquants : ' + kw.filter(w => !hit.includes(w)).join(', ') + ')' : ' — parfait') : '') : null,
-            h('div', { class: 'b-ctrl' }, h('button', { type: 'button', class: 'b-btn ok', onclick: () => grade(2) }, 'Je savais'), h('button', { type: 'button', class: 'b-btn mid', onclick: () => grade(1) }, 'Presque'), h('button', { type: 'button', class: 'b-btn ko', onclick: () => grade(0) }, 'Raté')));
+            ev ? h('p', { class: 'b-heard' }, 'Le prof : ' + (it.kind === 'Vrai ou faux' ? (ev.verdict ? 'bonne réponse.' : ev.note || 'raté.') : (kw.length ? `${hit.length} élément${hit.length > 1 ? 's' : ''} clé${hit.length > 1 ? 's' : ''} sur ${kw.length}` + (hit.length < kw.length ? ' ; il manquait : ' + ev.miss.slice(0, 4).join(', ') : ' : complet') : '') + (ev.refOk === false ? '. Pense à citer l\'article.' : '.'))) : null,
+            h('div', { class: 'b-ctrl' }, [[2, 'ok', 'Je savais'], [1, 'mid', 'Presque'], [0, 'ko', 'Raté']].map(([r, c, l]) => h('button', { type: 'button', class: 'b-btn ' + c + (ev && ev.res === r ? ' sugg' : ''), title: ev && ev.res === r ? 'Suggestion du prof' : null, onclick: () => grade(r) }, l))));
           say(it.answer);
         }
       }
@@ -551,6 +562,7 @@
   const micSvg = () => svgIcon('M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z', 'M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21');
   const spkSvg = on => svgIcon('M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5Z', on ? 'M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11' : 'M16 9.5l5 5M21 9.5l-5 5');
   const pauseSvg = () => svgIcon('M8 5v14M16 5v14');
+  const gearSvg = () => svgIcon('M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z', 'M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z');
 
   /* ---------- easter egg ---------- */
   function egg() {

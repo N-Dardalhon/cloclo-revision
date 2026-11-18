@@ -15,6 +15,14 @@ Un sélecteur (en haut du menu) permet de passer d'une matière à l'autre. Chaq
 ## Épreuves type partiel
 Page Jouer → *Épreuves type partiel* : dissertations, commentaires, cas pratiques et questions, dont beaucoup **hors du cours** (servitudes, usufruit, indivision, vices cachés, droit de la consommation, CVIM…). Chaque sujet : analyse guidée du sujet (anti hors-sujet), kit de survie, plan corrigé, points attendus. Aussi : méthode anti hors-sujet et exercice « Lire un sujet ». Données : `js/data/epreuves-biens.js` et `js/data/epreuves-vente.js`.
 
+## Le prof (dans le cerveau caché)
+Bouton **Le prof** du cerveau (`js/prof.js`) : un tuteur qui raisonne sur tout le cours (fiches, cartes, articles, arrêts, pièges, épreuves). Il comprend l'intention (définition, différence entre deux notions, conditions, pourquoi, exemple, cas pratique, plan, « interroge-moi », « par quoi je commence »), tolère les fautes, se souvient du sujet, affiche son raisonnement pendant que les neurones s'allument, corrige les réponses écrites et retient les notions ratées.
+- **Cours** (bouton *Cours*, ou « fais-moi cours sur la possession ») : la fiche découpée en parties, expliquée une par une, avec « ce qu'il faut retenir » et une question de vérification ; réexplication autrement si ce n'est pas compris ; progression mémorisée (« reprends le cours »).
+- **Restitution** (« je te restitue le chapitre 5 ») : on récite sans regarder (écrit ou micro), le prof liste ce qui est retenu et ce qui manque, et note sur 20.
+- **Le savais-tu ?** (« apprends-moi quelque chose ») : une notion, un arrêt ou un chiffre pas encore maîtrisé.
+- **Moteur local** : hors ligne et gratuit, par défaut.
+- **Mode Claude** (⚙ dans le cerveau) : avec une clé API Anthropic personnelle, le prof passe sur Claude, qui cherche lui-même dans le cours avec des outils, répond hors cours et note dans la répétition espacée. La clé reste dans le navigateur ; chaque question est facturée sur le compte Anthropic.
+
 ## Personnaliser
 - Matières, chapitres, prénom et dates de partiel : `MATIERES` et `SITE` dans `js/data/core.js`.
 - Date du partiel : page Progrès → Réglages.
