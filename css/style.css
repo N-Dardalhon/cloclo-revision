@@ -773,6 +773,19 @@ body.brain-on { overflow: hidden; }
 .pf-log { display: grid; gap: 12px; }
 .pf-lesson { position: sticky; top: -14px; z-index: 2; margin: -14px -18px 12px; padding: 8px 18px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; background: var(--b-card); border-bottom: 1px solid var(--b-line); font: 400 .78rem/1.2 var(--font-d); backdrop-filter: blur(6px); }
 .pf-lesson[hidden] { display: none; }
+.pf-llm { margin: -6px 0 12px; display: grid; gap: 5px; font: 400 .78rem/1.3 var(--font-d); color: var(--b-mute); }
+.pf-llm[hidden] { display: none; }
+.pf-llm b { color: var(--b-accent); text-transform: uppercase; letter-spacing: .08em; font-size: .7rem; }
+.pf-llm i { display: block; height: 3px; background: var(--b-line); border-radius: 2px; overflow: hidden; }
+.pf-llm u { display: block; height: 100%; background: var(--b-accent); transition: width .3s; }
+.pf-text > :first-child { margin-top: 0; }
+.pf-text ul, .pf-text ol { padding-left: 20px; margin: 6px 0; }
+.pf-text li { margin: 3px 0; }
+.pf-stop { justify-self: start; margin-top: 6px; border: 1px solid var(--b-line); background: transparent; color: var(--b-mute); border-radius: 99px; padding: 4px 10px; font: 600 .72rem/1 var(--font-d); cursor: pointer; }
+.pf-typing { display: flex; gap: 4px; padding: 6px 0; }
+.pf-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--b-accent); opacity: .3; animation: pf-dots 1s infinite; }
+.pf-typing i:nth-child(2) { animation-delay: .15s; } .pf-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes pf-dots { 50% { opacity: 1; transform: translateY(-2px); } }
 .pf-lesson b { color: var(--b-accent) !important; text-transform: uppercase; letter-spacing: .08em; font-size: .7rem; }
 .pf-lesson i { grid-column: 1; height: 2px; background: var(--b-line); }
 .pf-lesson u { display: block; height: 100%; background: var(--b-accent); transition: width .4s; }

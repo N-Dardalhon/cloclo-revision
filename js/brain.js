@@ -441,12 +441,26 @@
       panel.classList.add('chat');
       put(panel,
         h('div', { class: 'pf-top' },
-          h('p', { class: 'b-kind' }, h('i', { class: 'pf-dot' }), 'Le prof · ' + (Prof.Claude.ready() ? 'Claude' : 'moteur local')),
+          h('p', { class: 'b-kind' }, h('i', { class: 'pf-dot' }), 'Le prof · ', modeLabel()),
           h('button', { type: 'button', class: 'b-x2', title: 'Nouvelle conversation', 'aria-label': 'Nouvelle conversation', onclick: () => prof.reset() }, icon('flip', 15)),
           h('button', { type: 'button', class: 'b-x2', title: 'Réglages', 'aria-label': 'Réglages du prof', onclick: openSettings }, gearSvg()),
           h('button', { type: 'button', class: 'b-x2', 'aria-label': 'Fermer', onclick: closePanel }, icon('x', 16))),
         prof.el);
       panel.hidden = false; prof.start(); setTimeout(() => { prof.el.scrollTop = prof.el.scrollHeight; }, 0);
+      wakeLLM();
+    }
+    // Libellé du moteur, mis à jour quand l'IA locale finit de charger
+    function modeLabel() {
+      const s = h('span');
+      const paint = () => { const L = window.LocalLLM; s.textContent = Prof.Claude.ready() ? 'Claude' : L && L.ready() ? 'IA locale' : L && L.state.phase === 'loading' ? 'IA locale (chargement)' : 'moteur simple'; };
+      paint(); if (window.LocalLLM) { const un = LocalLLM.on(() => { if (!s.isConnected) return un(); paint(); }); }
+      return s;
+    }
+    // L'IA locale a été activée lors d'une visite précédente : on la recharge depuis le cache
+    function wakeLLM() {
+      const L = window.LocalLLM;
+      if (!L || Prof.Claude.ready() || !L.wanted() || L.ready() || L.state.phase === 'loading' || L.state.phase === 'error') return;
+      L.cached().then(ok => { if (ok) L.load().catch(() => { }); });
     }
     function openSettings() {
       stopAll(); view = 'settings'; panel.classList.remove('chat');

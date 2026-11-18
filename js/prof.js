@@ -201,6 +201,40 @@
     return { main: hits[0] || 'def', all: hits };
   }
 
+  /* ================= Vue d'ensemble d'une matière ou d'un chapitre ================= */
+  // Le fil rouge de chaque matière : ce qu'un prof dit en première heure de cours
+  const FIL = {
+    biens: {
+      intro: [`Le droit des biens répond à une question : **quels pouvoirs une personne peut-elle exercer sur une chose**, et comment les acquiert-elle ?`,
+        `Il pose d'abord le vocabulaire : les **choses** et les **biens** (les choses appropriables, qui ont une valeur), les **droits réels** (pouvoir direct sur une chose, opposable à tous) et les **droits personnels** (une créance contre une personne), les **meubles** et les **immeubles** (art. 516), et le **patrimoine** qui rassemble tout cela.`,
+        `Le cœur du semestre oppose ensuite **le droit et le fait**. D'un côté la **propriété**, le droit réel le plus complet (usus, fructus, abusus, art. 544). De l'autre la **possession**, une simple situation de fait (corpus + animus), mais protégée, et qui peut **devenir propriété** : par l'**usucapion** (art. 2272) ou, pour les meubles, par l'**art. 2276** (« en fait de meubles, la possession vaut titre »).`],
+      keys: ['bien', 'droit réel', 'droit personnel', 'patrimoine', 'propriété', 'possession', 'usucapion']
+    },
+    vente: {
+      intro: [`Les contrats spéciaux étudient les contrats **nommés**, que le Code civil règle un par un. Ton cours se concentre sur le premier d'entre eux, la **vente** : « une convention par laquelle l'un s'oblige à livrer une chose, et l'autre à la payer » (art. 1582).`,
+        `Elle est **consensuelle** : parfaite dès l'accord sur la chose et le prix (art. 1583), et la propriété passe à l'acheteur au même moment (**solo consensu**).`,
+        `Le cours suit la vie du contrat : d'abord **l'identifier** (la distinguer des contrats voisins), puis **la former** (consentement et avant-contrats, chose, prix, conditions de forme), enfin **ses effets** : transfert de la propriété et des risques, puis obligations du vendeur (délivrance conforme, garantie d'éviction).`],
+      keys: ['vente', 'qualification', 'promesse unilatérale de vente', 'pacte de préférence', 'prix sérieux', 'transfert de propriété', 'délivrance']
+    }
+  };
+  const QLIKE = /^(explique|expliquer|resume|c est quoi|qu est|pourquoi|comment|de quoi|donne|dis moi|quel|quelle|quels|quelles|quand|est ce|peux tu|tu peux|parle moi|montre|apprends|raconte|et (si|pour|la|le|les|l) )/;
+  const OVR = /(explique|expliquer|resume|resumer|presente|presenter|de quoi (ca )?(parle|traite)|c.?est quoi|qu.?est[- ]ce que|intro(duction)? (a|au|du|de)|vue d.?ensemble|grandes lignes|en gros|globalement|l.?essentiel|synthese|fais[- ]moi (le )?point|apprends[- ]moi|raconte|parle[- ]moi)/;
+  const MATRE = { biens: /droit des biens|\bles biens\b/, vente: /contrats? speciaux|droit de la vente|(cours|matiere) (sur|de) la vente/ };
+  function overviewScope(q) {
+    const n = norm(q).replace(/[’']/g, ' ').replace(/\s+/g, ' ');
+    if (!OVR.test(n)) return null;
+    const chs = MATIERES.flatMap(M => M.chapters.map(c => Object.assign({ M }, c)));
+    const num = n.match(/\b(?:chap(?:itre)?|ch)\.?\s*(\d+)/);
+    const named = Object.keys(MATRE).find(k => MATRE[k].test(n));
+    const M = MATIERES.find(m => m.id === named) || MATIERES.find(m => m.id === SITE.matiere);
+    if (num) { const c = M.chapters.find(x => String(x.n) === num[1]); if (c) return { ch: c.id }; }
+    const byTitle = chs.find(c => n.includes(norm(c.title).replace(/[’']/g, ' ')));
+    if (byTitle) return { ch: byTitle.id };
+    if (named && !/\b(article|art|arret)\b/.test(n)) return { mat: named };
+    if (/\b(tout )?(le|du|mon|ce) (cours|programme|semestre)\b|la matiere|tout le cours/.test(n) && !/(cours (sur|de) (l|la|le|les) )/.test(n)) return { mat: M.id };
+    return null;
+  }
+
   /* ================= Découpage des fiches en parties de cours ================= */
   const SEQC = {};
   function lessonsOf(ch) {
@@ -639,6 +673,121 @@
       return { steps: [fixed.length ? { t: 'J\'ai compris ' + fixed.map(([a, b]) => '« ' + a + ' » comme « ' + b + ' »').join(', ') } : null, { t: 'Je cherche dans tout le cours : ' + res.length + ' passages', docs: res }, { t: 'Je garde le plus pertinent' }], blocks: [['p', '**' + plain(best.title) + '** — ' + best.body], res[1] ? ['p', '*Voir aussi :* ' + plain(res[1].title) + ' : ' + firstSentence(res[1].body)] : null, ['src', res]], speak: best.answer || best.body, chips: best.ask ? [{ label: 'Interroge-moi dessus', fn: () => quizItem(best) }] : [] };
     }
 
+    /* ================= Vue d'ensemble ================= */
+    const introOf = ch => { const o = DATA.all[ch]; const b = o && o.fiche && o.fiche.find(x => x[0] === 'intro'); return b ? b[1] : ''; };
+    // Première idée d'une partie : le premier vrai paragraphe (pas la note, pas un tableau)
+    const gist = x => { const b = x.blocks.find(b => ['p', 'intro', 'def', 'tip'].includes(b[0])); return b ? firstSentence(b[0] === 'def' ? b[1] + ' : ' + b[2] : b[1]).slice(0, 240) : ''; };
+    const keyDefs = ch => { const out = []; U.lexicon().forEach(e => { if (e.ch === ch && !out.some(x => x.term === e.term)) out.push(e); }); return out; };
+    function overview(sc) {
+      if (sc.ch) {
+        const c = chapById(sc.ch), seqs = lessonsOf(sc.ch) || [], intro = introOf(sc.ch), defs = keyDefs(sc.ch).slice(0, 6);
+        const trap = docs.find(d => d.ch === sc.ch && d.kind === 'Piège');
+        hooks.focusChapter(sc.ch);
+        const blocks = [['p', '**' + c.M.title + ', chapitre ' + c.n + ' : ' + c.title + '.** ' + (intro || 'En deux mots : ' + c.blurb + '.')]];
+        if (seqs.length) { blocks.push(['h', 'Le chemin du chapitre']); blocks.push(['ol', seqs.filter(gist).slice(0, 9).map(x => '**' + x.title + '** : ' + gist(x))]); }
+        if (defs.length) { blocks.push(['h', 'Les notions à savoir définir']); blocks.push(['ul', defs.map(e => '**' + e.term + '** : ' + firstSentence(e.def))]); }
+        if (trap) blocks.push(['trap', trap.body]);
+        blocks.push(['p', 'Je te le fais en cours complet, partie par partie, avec une vérification à chaque étape ?']);
+        return { steps: [{ t: 'Je comprends que tu veux la **vue d\'ensemble** du chapitre ' + c.n + ' (' + c.short + ')' }, { t: 'Je relis l\'introduction et le plan de la fiche : ' + seqs.length + ' parties', docs: docs.filter(d => d.ch === sc.ch).slice(0, 12) }, defs.length ? { t: 'Je sélectionne les ' + defs.length + ' définitions incontournables' } : null], blocks, speak: plain(intro || c.title),
+          chips: [{ label: 'Oui, fais-moi le cours', fn: () => lessonStart(sc.ch) }, { label: 'Je le restitue', fn: () => restitStart(sc.ch, null) }, { label: 'Interroge-moi dessus', q: 'interroge-moi sur le chapitre ' + c.n }] };
+      }
+      const M = MATIERES.find(m => m.id === sc.mat), F = FIL[M.id];
+      const L = hooks.lobes().filter(l => l.mat === M).slice().sort((a, b) => a.m - b.m)[0];
+      const blocks = F.intro.map(t => ['p', t]);
+      blocks.push(['h', 'Comment le cours est construit']);
+      blocks.push(['ul', (M.parts || []).map(([pt, tts]) => '**' + pt + '** — ' + tts.map(([tt, ids]) => ids.map(id => { const c = chapById(id); return 'ch. ' + c.n + ' ' + c.title + ' (' + c.blurb + ')'; }).join(' ; ')).join(' ; '))]);
+      const ks = F.keys.map(k => U.lookup(k)).filter(Boolean);
+      if (ks.length) { blocks.push(['h', 'Les notions de base']); blocks.push(['ul', ks.map(e => '**' + e.term + '** : ' + firstSentence(e.def))]); }
+      if (L) blocks.push(['tip', '**Par où commencer ?** Ton chapitre le plus fragile : **' + L.chap.title + '** (' + Math.round(L.m * 100) + ' % maîtrisé). Mais si tu découvres la matière, commence par le ch. ' + M.chapters[0].n + ', qui pose le vocabulaire.']);
+      return { steps: [{ t: 'Je comprends que tu veux **la matière entière** : ' + M.title }, { t: 'Je reprends le plan du semestre : ' + M.chapters.length + ' chapitres', docs: docs.filter(d => d.mat === M && d.kind === 'Définition').slice(0, 16) }, { t: 'Je dégage le fil rouge et les notions de base' }], blocks, speak: plain(F.intro[0]),
+        chips: [{ label: 'Cours du ch. ' + M.chapters[0].n, fn: () => lessonStart(M.chapters[0].id) }].concat(M.chapters.slice(1, 4).map(c => ({ label: 'Résume le ch. ' + c.n, q: 'résume le chapitre ' + c.n + (M.id !== cur().id ? ' de ' + M.title : '') }))).concat([{ label: 'Interroge-moi', fn: () => quiz(null) }]) };
+    }
+
+    /* ================= IA locale : le modèle rédige, le cours sert de mémoire ================= */
+    const LLM = window.LocalLLM;
+    const llmOn = () => !!(LLM && LLM.ready());
+    let llmHist = [];
+    const llmBar = h('div', { class: 'pf-llm', hidden: true });
+    el.insertBefore(llmBar, log);
+    if (LLM) LLM.on(st => {
+      if (st.phase === 'loading') { llmBar.hidden = false; llmBar.replaceChildren(h('span', null, h('b', null, 'IA locale'), ' · ' + st.text), h('i', null, h('u', { style: { width: Math.round((st.progress || 0) * 100) + '%' } }))); }
+      else if (st.phase === 'ready') { llmBar.hidden = true; if (log.childElementCount) bubble('prof sys', h('p', { html: md('**IA locale prête** (' + LLM.label(LLM.chosen().id) + ') : maintenant je rédige mes réponses moi-même, sans connexion.') })); }
+      else llmBar.hidden = true;
+    });
+    function chapterCtx(ch) {
+      const c = chapById(ch), seqs = lessonsOf(ch) || [];
+      return 'CHAPITRE ' + c.n + ' (' + c.M.title + ') : ' + c.title + '\nIntroduction : ' + plain(introOf(ch)) + '\nPlan :\n' + seqs.filter(gist).slice(0, 10).map((x, i) => (i + 1) + '. ' + x.title + ' — ' + gist(x)).join('\n') + '\nDéfinitions :\n' + keyDefs(ch).slice(0, 6).map(e => '- ' + e.term + ' : ' + firstSentence(e.def)).join('\n');
+    }
+    function matiereCtx(mid) {
+      const M = MATIERES.find(m => m.id === mid), F = FIL[mid];
+      return 'MATIÈRE : ' + M.title + '\nFil rouge : ' + plain(F.intro.join(' ')) + '\nChapitres :\n' + M.chapters.map(c => '- ch. ' + c.n + ' ' + c.title + ' (' + c.blurb + ') : ' + firstSentence(introOf(c.id)).slice(0, 240)).join('\n') + '\nNotions de base :\n' + F.keys.map(k => U.lookup(k)).filter(Boolean).map(e => '- ' + e.term + ' : ' + firstSentence(e.def)).join('\n');
+    }
+    function ragFor(q, sc) {
+      const parts = [], used = [], steps = [];
+      // fenêtre du modèle : 4096 tokens en tout (consignes + extraits + historique + réponse)
+      let budget = 3200;
+      const put = t => { t = t.trim(); if (!t || budget <= 0) return false; if (t.length > budget) t = t.slice(0, budget) + '…'; parts.push(t); budget -= t.length; return true; };
+      if (sc && sc.mat) { put(matiereCtx(sc.mat)); steps.push({ t: 'Je reprends le plan de **' + MATIERES.find(m => m.id === sc.mat).title + '** et son fil rouge' }); }
+      if (sc && sc.ch) { put(chapterCtx(sc.ch)); hooks.focusChapter(sc.ch); steps.push({ t: 'Je relis l\'introduction et le plan du **chapitre ' + chapById(sc.ch).n + '**' }); }
+      let found = uniqBy(concepts(stripFollow(q)).filter(c => !(c.key.split(' ').length === 1 && GENERIC.has(c.key))), c => norm(c.term));
+      let query = q;
+      if (!found.length && conv.topic && toks(q).length <= 4 && !sc) { query += ' ' + conv.topic.term; found = [conv.topic]; }
+      if (found.length) { setTopic(found[0]); steps.push({ t: 'Je repère ' + found.slice(0, 3).map(t => '**' + t.term + '**' + (t.fixed ? ' (orthographe corrigée)' : '')).join(', ') }); }
+      found.slice(0, 3).forEach(t => { const e = U.lookup(t.term); if (e && e.def) put('DÉFINITION — ' + t.term + ' : ' + plain(e.def)); });
+      const refs = refsOf(q);
+      const hits = uniqBy(idx.search(query, sc ? 6 : 12, d => d.kind !== 'Épreuve'), d => d.id);
+      const extra = refs.length ? docs.filter(d => d.kind === 'Article' && refs.some(r => (d.ref + ' ' + d.title + ' ' + d.body).includes(r))).slice(0, 2) : [];
+      extra.concat(hits).forEach(d => {
+        const where = d.chap && d.chap.n !== '' ? d.mat.title + ', ch. ' + d.chap.n : d.mat.title;
+        const t = '[' + d.kind + ' · ' + where + ' · ' + plain(d.title).slice(0, 90) + '] ' + plain(d.body).slice(0, 550);
+        if (put(t)) used.push(d);
+      });
+      if (used.length) steps.push({ t: 'Je fouille ton cours : **' + used.length + ' passages** utiles', docs: used });
+      return { text: parts.join('\n\n'), used, steps };
+    }
+    function llmSystem() {
+      const name = nameOf();
+      return `Tu es le prof de droit particulier de ${name || 'ton élève'}, étudiante en L3 de droit en France, qui révise ses partiels (${MATIERES.map(m => m.title).join(' et ')}). Tu lui parles en français, en la tutoyant, comme un excellent chargé de TD : clair, chaleureux, exigeant.
+
+Tes règles :
+- Tu t'appuies d'abord sur les EXTRAITS DE SON COURS fournis avec la question. Tu cites les articles et les arrêts qui y figurent. Tu n'inventes jamais un numéro d'article, une date ou un arrêt.
+- Si les extraits ne répondent pas, tu le dis franchement, puis tu donnes ce que tu sais en précisant que c'est hors de son cours.
+- Tu expliques, tu ne recopies pas : reformule avec tes mots, dis à quoi sert la règle et qui elle protège, relie les notions entre elles, donne un exemple concret (une petite histoire avec des personnages) quand c'est utile.
+- Pour une question large (une matière, un chapitre) : commence par l'idée générale en deux phrases, puis déroule le plan dans l'ordre, une ou deux phrases par étape.
+- Pour un cas pratique : qualification des faits, problème de droit, règle (majeure), application (mineure), conclusion.
+- Mise en forme : paragraphes courts, **gras** pour les notions clés, listes avec « - » quand ça aide. Pas de titres avec #. Entre 150 et 350 mots sauf si elle demande plus court ou plus long.
+- Termine par UNE courte question pour vérifier qu'elle a compris ou pour la faire réfléchir.`;
+    }
+    async function llmTurn(q, sc) {
+      const b = bubble('prof llm', []);
+      const trace = h('details', { class: 'pf-think', open: true }, h('summary', null, 'Je réfléchis…'), h('ol'));
+      b.append(trace);
+      const step = s => { trace.lastChild.append(h('li', { html: md(s.t) })); if (s.docs && s.docs.length) hooks.light(s.docs); scroll(); };
+      const R = ragFor(q, sc);
+      for (const s of R.steps) { step(s); await new Promise(r => setTimeout(r, reduce ? 0 : 260)); }
+      step({ t: 'Je rédige ma réponse' });
+      const textEl = h('div', { class: 'pf-text' }, h('p', { class: 'pf-typing' }, h('i'), h('i'), h('i')));
+      const stop = h('button', { type: 'button', class: 'pf-stop', onclick: () => LLM.stop() }, 'Arrêter');
+      b.append(textEl, stop);
+      const user = (R.text ? 'EXTRAITS DE SON COURS :\n' + R.text + '\n\n' : 'EXTRAITS DE SON COURS : aucun passage ne correspond.\n\n') + 'SA QUESTION : ' + q;
+      const messages = [{ role: 'system', content: llmSystem() }].concat(llmHist.slice(-4), [{ role: 'user', content: user }]);
+      let out = '', last = 0;
+      try {
+        out = await LLM.chat(messages, t => { out = t; const now = Date.now(); if (now - last > 60) { last = now; textEl.innerHTML = Claude.render(t); scroll(); } });
+      } finally { stop.remove(); }
+      textEl.innerHTML = Claude.render(out || '…');
+      trace.firstChild.textContent = 'Mon raisonnement (' + trace.lastChild.childElementCount + ' étapes)';
+      trace.open = false;
+      const sl = srcList(R.used); if (sl) b.append(sl);
+      llmHist.push({ role: 'user', content: q }, { role: 'assistant', content: out.slice(0, 600) });
+      llmHist = llmHist.slice(-4);
+      const t = conv.topic;
+      const c = chips([t && { label: 'Plus simple', q: 'explique plus simplement' }, t && { label: 'Un exemple concret', q: 'donne-moi un exemple concret' }, t && { label: 'Interroge-moi dessus', fn: () => { const r = quiz(t); if (r && !r.then) reply(r); } }, sc && sc.ch && { label: 'Fais-moi le cours', fn: () => lessonStart(sc.ch) }, sc && sc.mat && { label: 'Cours du ch. ' + MATIERES.find(m => m.id === sc.mat).chapters[0].n, fn: () => lessonStart(MATIERES.find(m => m.id === sc.mat).chapters[0].id) }]);
+      if (c) log.append(c);
+      hooks.say(plain(out).split(/(?<=[.!?])\s+/).slice(0, 2).join(' '));
+      scroll();
+    }
+
     /* ================= Faire cours ================= */
     // Une leçon = la fiche du chapitre, découpée en parties (sections et sous-sections),
     // expliquée partie par partie, avec une vérification de compréhension à chaque étape.
@@ -855,7 +1004,7 @@
         if (r && r.then) await r; else if (r) await reply(r);
       } finally { busy = false; hooks.busy(false); }
     }
-    function localAnswer(q) {
+    function localAnswer(q, noLLM) {
       const n = norm(q);
       if (conv.pending && conv.pending.type === 'quiz' && !/^(un )?indice\b|^aide\b/.test(n) && (/\?\s*$/.test(q) || /^(stop|arrete|change|autre chose)/.test(n) || intentOf(q).all.length)) conv.pending = null;
       if (conv.pending && conv.pending.type === 'quiz') return answerQuiz(q);
@@ -867,11 +1016,12 @@
         if (/^(explique autrement|autrement|plus simple|j.?ai pas compris|je comprends pas|pas compris)/.test(cmd)) { conv.pending = null; return lessonAlt(); }
         if (/^(pause|stop|arrete)\b/.test(cmd)) return lessonPause();
       }
+      const qlike = /\?\s*$/.test(q) || QLIKE.test(cmd) || !!overviewScope(q);
       if (conv.pending && conv.pending.type === 'lesson') {
-        if (isCmd || (/\?\s*$/.test(q) && intentOf(q).all.length)) conv.pending = null; else return lessonAnswer(q);
+        if (isCmd || qlike) conv.pending = null; else return lessonAnswer(q);
       }
       if (conv.pending && conv.pending.type === 'restit') {
-        if (q.length > 15 && !isCmd && !/\?\s*$/.test(q) && !/^(stop|annule|non)/.test(n)) return restitGrade(q);
+        if (q.length > 15 && !isCmd && !qlike && !/^(stop|annule|non)/.test(n)) return restitGrade(q);
         conv.pending = null;
       }
       if (conv.pending && conv.pending.type === 'cas' && q.length > 25 && !/\?$/.test(q)) return gradeCas(q);
@@ -883,7 +1033,7 @@
       const content = toks(q).filter(w => !FOLLOWW.test(w));
       const shortFollow = !found.length && conv.topic && !content.length && (FOLLOW.includes(it.main) || it.all.some(x => FOLLOW.includes(x)));
       const qrefs = refsOf(q.replace(/^\s*(\d{3,4}(?:-\d+)?)\s*$/, 'art. $1'));
-      if (qrefs.length && !it.all.includes('compare') && it.main !== 'cas') return articleLookup(qrefs, q);
+      if (qrefs.length && !it.all.includes('compare') && it.main !== 'cas' && (noLLM || !llmOn())) return articleLookup(qrefs, q);
       if (it.main === 'lesson' || it.main === 'restit') {
         let ch = chapterFrom(q);
         if (!ch && /reprend/.test(n)) ch = Object.keys(P.lessons || {}).find(k => P.lessons[k].i > 0 && !P.lessons[k].done);
@@ -899,6 +1049,9 @@
       if (it.main === 'revise') return revise();
       if (it.main === 'cas') return cas(q);
       if (it.main === 'quiz') { const t = found[0] || (/dessus|la-dessus|ca\b/.test(n) ? conv.topic : null); if (t) setTopic(t); return quiz(t); }
+      const sc = overviewScope(q);
+      if (llmOn() && !noLLM) return llmTurn(q, sc).catch(e => { bubble('prof sys', h('p', null, 'L\'IA locale a calé (' + e.message + '). Je réponds avec mon moteur simple.')); const r = localAnswer(q, true); return r && r.then ? r : reply(r); });
+      if (sc) return overview(sc);
       if (it.main === 'plan') { const r = planFor(q); if (r) return r; }
       if (it.main === 'compare' || it.all.includes('compare')) {
         if (found.length < 2 && conv.topic && found.length === 1 && found[0].key !== conv.topic.key) found = [conv.topic, found[0]];
@@ -926,7 +1079,14 @@
       lines.push('Je peux te **faire cours** sur un chapitre, t\'écouter le **restituer**, t\'**apprendre** quelque chose, répondre à une question, comparer deux notions, corriger un **cas pratique**, ou t\'**interroger**.');
       return { blocks: lines.map(l => ['p', l]), chips: [resume && { label: 'Reprendre le cours : ' + chapById(resume[0]).short, fn: () => lessonStart(resume[0]) }, { label: 'Fais-moi cours', fn: () => reply(lessonPicker('lesson')) }, { label: 'Je restitue un chapitre', fn: () => reply(lessonPicker('restit')) }, { label: 'Apprends-moi un truc', q: 'apprends-moi quelque chose' }, { label: 'Par quoi je commence ?', q: 'par quoi je commence ?' }, { label: 'Interroge-moi', fn: () => quiz(null) }, { label: 'Promesse ou pacte ?', q: 'différence entre promesse unilatérale de vente et pacte de préférence' }] };
     }
-    function start() { if (!log.childElementCount) reply(Claude.ready() ? { blocks: [['p', 'Mode **Claude** actif : je fouille ton cours moi-même, je raisonne et je t\'interroge. Pose ta question.']], chips: greet().chips } : greet()); }
+    function start() {
+      if (log.childElementCount) return;
+      if (Claude.ready()) return reply({ blocks: [['p', 'Mode **Claude** actif : je fouille ton cours moi-même, je raisonne et je t\'interroge. Pose ta question.']], chips: greet().chips });
+      const g = greet();
+      if (llmOn()) g.blocks.push(['tip', '**IA locale active** : je rédige mes réponses avec un vrai modèle de langage qui tourne sur ta carte graphique, à partir de ton cours. Pose-moi n\'importe quelle question, même large.']);
+      else if (LLM && !LLM.wanted()) g.blocks.push(['tip', 'Tu veux que je réponde comme un vrai chat IA ? Active l\'**IA locale** (bouton ⚙) : un modèle gratuit qui tourne dans ton navigateur, sans compte.']);
+      reply(g);
+    }
     function explainItem(it) { ask('Explique-moi : ' + plain(it.title)); }
 
     /* ---------- contexte pour Claude ---------- */
@@ -951,7 +1111,7 @@
       }
     };
 
-    return { el, ask, start, explainItem, lesson: ch => (busy ? null : (ch ? lessonStart(ch) : reply(lessonPicker('lesson')))), get busy() { return busy; }, reset() { log.replaceChildren(); conv.topic = null; conv.pending = null; conv.lesson = null; lessonHead(); Claude.reset(); start(); } };
+    return { el, ask, start, explainItem, lesson: ch => (busy ? null : (ch ? lessonStart(ch) : reply(lessonPicker('lesson')))), get busy() { return busy; }, reset() { log.replaceChildren(); conv.topic = null; conv.pending = null; conv.lesson = null; llmHist = []; lessonHead(); Claude.reset(); start(); } };
   }
 
   /* ================= Mode Claude (clé API personnelle) ================= */
@@ -1163,8 +1323,53 @@ Comment tu travailles :
       });
       flush(); return html;
     }
-    return { ready, cfg, setCfg, turn, reset() { messages = []; }, MODEL };
+    return { ready, cfg, setCfg, turn, render, reset() { messages = []; }, MODEL };
   })();
+
+  /* ================= Réglages de l'IA locale ================= */
+  function localSettings(onClose) {
+    const L = window.LocalLLM;
+    if (!L) return null;
+    const c = L.cfg();
+    const sel = h('select', { 'aria-label': 'Modèle' }, L.MODELS.map(m => h('option', { value: m.id, selected: L.chosen().id === m.id }, m.label + ' · ' + m.size + ' · ' + m.note)));
+    const status = h('p', { class: 'pf-small' }, 'Je vérifie ta carte graphique…');
+    const bar = h('div', { class: 'pf-llm', hidden: true });
+    const go = h('button', { type: 'button', class: 'b-btn' }, 'Télécharger et activer');
+    const off = h('button', { type: 'button', class: 'b-btn ghost' }, 'Désactiver');
+    const del = h('button', { type: 'button', class: 'b-btn ghost' }, 'Supprimer le modèle');
+    const paint = st => {
+      bar.hidden = st.phase !== 'loading';
+      if (st.phase === 'loading') bar.replaceChildren(h('span', null, st.text), h('i', null, h('u', { style: { width: Math.round((st.progress || 0) * 100) + '%' } })));
+      go.disabled = st.phase === 'loading';
+      if (st.phase === 'ready') { del.hidden = false; status.innerHTML = md('**Active** : ' + L.label(L.chosen().id) + '. Le prof rédige maintenant ses réponses lui-même.'); go.textContent = 'Retour au prof'; }
+      if (st.phase === 'error') status.textContent = st.text;
+      off.hidden = !L.wanted();
+    };
+    const un = L.on(st => { if (!go.isConnected) return un(); paint(st); });
+    L.gpuInfo().then(async g => {
+      if (!g.ok) { status.textContent = g.why + ' Le prof garde son moteur simple.'; go.hidden = true; return; }
+      if (L.ready()) { del.hidden = false; return paint(L.state); }
+      const has = await L.cached(sel.value);
+      del.hidden = !has;
+      status.textContent = has ? 'Modèle déjà téléchargé : l\'activer prend quelques secondes.' : 'Ta carte graphique est compatible. Le modèle se télécharge une seule fois.';
+      if (has) go.textContent = 'Activer';
+    });
+    sel.onchange = async () => { const has = await L.cached(sel.value); go.textContent = L.ready() && L.cfg().model === sel.value ? 'Retour au prof' : has ? 'Activer' : 'Télécharger et activer'; };
+    go.onclick = async () => {
+      if (L.ready() && L.cfg().model === sel.value) return onClose && onClose();
+      try { await L.load(sel.value); } catch (e) { }
+    };
+    off.onclick = () => { L.setCfg({ on: false }); status.textContent = 'IA locale désactivée pour les prochaines visites (le modèle reste téléchargé).'; off.hidden = true; };
+    del.onclick = async () => { del.disabled = true; await L.forget(); status.textContent = 'Modèle supprimé de ce navigateur.'; go.textContent = 'Télécharger et activer'; del.disabled = false; };
+    off.hidden = !L.wanted(); del.hidden = true;
+    return h('div', { class: 'pf-set' },
+      h('h2', null, 'Une vraie IA, dans ton navigateur'),
+      h('p', { class: 'b-body' }, 'Le prof peut répondre comme un chat IA : un modèle de langage (Qwen 3.5) tourne directement sur ta carte graphique, lit les passages de ton cours qui correspondent à ta question et rédige une vraie explication. Gratuit, sans compte, et tes questions ne quittent pas l\'appareil.'),
+      h('label', { class: 'pf-field' }, h('span', null, 'Modèle'), sel),
+      h('div', { class: 'b-ctrl', style: { justifyContent: 'flex-start', flexWrap: 'wrap' } }, go, off, del),
+      bar, status,
+      h('p', { class: 'pf-small' }, 'Le premier téléchargement se fait depuis Hugging Face, de préférence en wifi ; ensuite le navigateur le garde et tout marche hors ligne. Un petit modèle peut se tromper : vérifie avec les sources affichées sous chaque réponse.'));
+  }
 
   /* ================= Réglages du mode Claude ================= */
   function settings(onClose) {
@@ -1175,8 +1380,9 @@ Comment tu travailles :
     const msg = h('p', { class: 'pf-small' });
     return h('div', { class: 'pf-set' },
       h('p', { class: 'b-kind' }, 'Réglages du prof'),
-      h('h2', null, 'Brancher un vrai cerveau'),
-      h('p', { class: 'b-body' }, 'Sans rien brancher, le prof fonctionne hors ligne avec son moteur local. Avec une clé API Anthropic, il passe sur Claude (' + Claude.MODEL + ') : il fouille ton cours lui-même, raisonne, répond aux questions hors cours et corrige vraiment tes réponses.'),
+      localSettings(onClose),
+      h('h2', null, 'Ou brancher Claude'),
+      h('p', { class: 'b-body' }, 'Avec une clé API Anthropic, le prof passe sur Claude (' + Claude.MODEL + '), bien plus fort que l\'IA locale : il fouille ton cours lui-même avec des outils, raisonne longuement, répond aux questions hors cours et corrige vraiment tes réponses. Il a la priorité sur l\'IA locale.'),
       h('label', { class: 'pf-field' }, h('span', null, 'Clé API'), key),
       h('label', { class: 'pf-field row' }, on, h('span', null, 'Utiliser Claude')),
       h('label', { class: 'pf-field' }, h('span', null, 'Réflexion'), eff),

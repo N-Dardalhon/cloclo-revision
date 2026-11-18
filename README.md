@@ -20,7 +20,9 @@ Bouton **Le prof** du cerveau (`js/prof.js`) : un tuteur qui raisonne sur tout l
 - **Cours** (bouton *Cours*, ou « fais-moi cours sur la possession ») : la fiche découpée en parties, expliquée une par une, avec « ce qu'il faut retenir » et une question de vérification ; réexplication autrement si ce n'est pas compris ; progression mémorisée (« reprends le cours »).
 - **Restitution** (« je te restitue le chapitre 5 ») : on récite sans regarder (écrit ou micro), le prof liste ce qui est retenu et ce qui manque, et note sur 20.
 - **Le savais-tu ?** (« apprends-moi quelque chose ») : une notion, un arrêt ou un chiffre pas encore maîtrisé.
-- **Moteur local** : hors ligne et gratuit, par défaut.
+- **Vue d'ensemble** (« explique-moi le droit des biens », « résume le chapitre 2 ») : le fil rouge de la matière, le plan et les notions de base, ou le chemin d'un chapitre partie par partie.
+- **Moteur simple** : hors ligne et gratuit, par défaut ; il assemble ses réponses à partir des passages du cours.
+- **IA locale** (⚙ dans le cerveau, `js/llm.js`) : un vrai modèle de langage (Qwen 3.5, 0,5 à 2,4 Go selon le modèle choisi) tourne dans le navigateur grâce à WebGPU, via WebLLM. Pour chaque question, le prof cherche les passages du cours qui y répondent et le modèle rédige une vraie explication à partir d'eux, en tenant compte de la conversation. Gratuit, sans compte, rien ne quitte l'appareil ; le modèle est téléchargé une fois depuis Hugging Face puis gardé en cache (le service worker ne touche jamais à ce cache).
 - **Mode Claude** (⚙ dans le cerveau) : avec une clé API Anthropic personnelle, le prof passe sur Claude, qui cherche lui-même dans le cours avec des outils, répond hors cours et note dans la répétition espacée. La clé reste dans le navigateur ; chaque question est facturée sur le compte Anthropic.
 
 ## Personnaliser
