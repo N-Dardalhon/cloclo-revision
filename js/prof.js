@@ -219,7 +219,7 @@
   };
   const QLIKE = /^(explique|expliquer|resume|c est quoi|qu est|pourquoi|comment|de quoi|donne|dis moi|quel|quelle|quels|quelles|quand|est ce|peux tu|tu peux|parle moi|montre|apprends|raconte|et (si|pour|la|le|les|l) )/;
   const OVR = /(explique|expliquer|resume|resumer|presente|presenter|de quoi (ca )?(parle|traite)|c.?est quoi|qu.?est[- ]ce que|intro(duction)? (a|au|du|de)|vue d.?ensemble|grandes lignes|en gros|globalement|l.?essentiel|synthese|fais[- ]moi (le )?point|apprends[- ]moi|raconte|parle[- ]moi)/;
-  const MATRE = { biens: /droit des biens|\bles biens\b/, vente: /contrats? speciaux|droit de la vente|(cours|matiere) (sur|de) la vente/ };
+  const MATRE = { biens: /droits? (des|de|du) biens?|\bles biens\b/, vente: /contrats? speciaux|droit de la vente|(cours|matiere) (sur|de) la vente/ };
   function overviewScope(q) {
     const n = norm(q).replace(/[’']/g, ' ').replace(/\s+/g, ' ');
     if (!OVR.test(n)) return null;
@@ -1084,8 +1084,17 @@ Tes règles :
       if (Claude.ready()) return reply({ blocks: [['p', 'Mode **Claude** actif : je fouille ton cours moi-même, je raisonne et je t\'interroge. Pose ta question.']], chips: greet().chips });
       const g = greet();
       if (llmOn()) g.blocks.push(['tip', '**IA locale active** : je rédige mes réponses avec un vrai modèle de langage qui tourne sur ta carte graphique, à partir de ton cours. Pose-moi n\'importe quelle question, même large.']);
-      else if (LLM && !LLM.wanted()) g.blocks.push(['tip', 'Tu veux que je réponde comme un vrai chat IA ? Active l\'**IA locale** (bouton ⚙) : un modèle gratuit qui tourne dans ton navigateur, sans compte.']);
+      else if (LLM && LLM.state.phase !== 'loading') {
+        g.blocks.push(['tip', '**Pour que je réponde comme un vrai prof**, avec mes propres mots et sur n\'importe quelle question, active l\'**IA locale** : un modèle gratuit qui tourne dans ton navigateur, sans compte (1,1 Go à télécharger une seule fois, en wifi de préférence).']);
+        g.chips = [{ label: '✦ Activer la vraie IA', fn: activateLLM }].concat(g.chips);
+      }
       reply(g);
+    }
+    async function activateLLM() {
+      const g = await LLM.gpuInfo();
+      if (!g.ok) return bubble('prof sys', h('p', null, g.why + ' Je garde mon moteur simple ; pour un prof plus fort, il y a aussi le mode Claude (⚙).'));
+      bubble('prof sys', h('p', { html: md('Je télécharge mon cerveau (**' + LLM.label(LLM.chosen().id) + '**). La barre en haut montre l\'avancement ; tu peux continuer à me parler pendant ce temps.') }));
+      try { await LLM.load(); } catch (e) { bubble('prof sys', h('p', null, 'Le chargement a échoué (' + e.message + '). Réessaie, ou choisis le modèle Léger dans ⚙.')); }
     }
     function explainItem(it) { ask('Explique-moi : ' + plain(it.title)); }
 
