@@ -30,7 +30,8 @@
     const dark = d == null ? matchMedia('(prefers-color-scheme: dark)').matches : d;
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     const vente = SITE.matiere === 'vente';
-    const m = $('meta[name=theme-color]'); if (m) m.content = vente ? (dark ? '#141A2A' : '#1E2A44') : (dark ? '#0F1B16' : '#EDF2EC');
+    const soc = SITE.matiere === 'societes';
+    const m = $('meta[name=theme-color]'); if (m) m.content = vente ? (dark ? '#141A2A' : '#1E2A44') : soc ? (dark ? '#0F1524' : '#EEF1F7') : (dark ? '#0F1B16' : '#EDF2EC');
     $$('.theme-btn').forEach(b => { b.replaceChildren(icon(dark ? 'sun' : 'moon', 20)); b.setAttribute('aria-label', dark ? 'Passer en thème clair' : 'Passer en thème sombre'); });
   }
   function toggleTheme() { const cur = document.documentElement.dataset.theme === 'dark'; S().prefs.dark = !cur; ST.save(); applyTheme(); }
@@ -44,6 +45,13 @@
       s.append(UI.svg('text', { x: 20, y: 25.5, 'text-anchor': 'middle', fill: '#F3D9A8', 'font-family': 'Newsreader, Georgia, serif', 'font-size': 16, 'font-style': 'italic', 'font-weight': 700 }, 'V'));
       return s;
     }
+    if (SITE.matiere === 'societes') { // trois parts sociales empilées, comme un registre
+      const s = UI.svg('svg', { viewBox: '0 0 40 40', width: 34, height: 34, 'aria-hidden': 'true', class: 'logo-svg' });
+      s.append(UI.svg('rect', { width: 40, height: 40, rx: 8, fill: '#172238' }));
+      [['M8 26h24v6H8Z', '#F2C14E'], ['M11 18h18v6H11Z', '#9BB8E8'], ['M14 10h12v6H14Z', '#F2A6A0']].forEach(p => s.append(UI.svg('path', { d: p[0], fill: p[1] })));
+      s.append(UI.svg('path', { d: 'M6 34.5h28', stroke: '#FBFCFE', 'stroke-width': 1.6, 'stroke-linecap': 'round' }));
+      return s;
+    }
     const s = UI.svg('svg', { viewBox: '0 0 40 40', width: 34, height: 34, 'aria-hidden': 'true', class: 'logo-svg' });
     s.append(UI.svg('rect', { width: 40, height: 40, rx: 8, fill: '#14271F' }));
     [['M5 5h14l-2 13H5Z', '#F2A6A0'], ['M21 5h14v10l-14 3Z', '#F3CE72'], ['M5 21h12l4 14H5Z', '#B9A6EB'], ['M23 21l12-2v16H25Z', '#9ED08A']].forEach(p => s.append(UI.svg('path', { d: p[0], fill: p[1] })));
@@ -51,7 +59,7 @@
   };
 
   /* ---------- Choix de la matière ---------- */
-  const SHORT = { biens: 'Droit des biens', vente: 'Contrats spéciaux' };
+  const SHORT = { biens: 'Droit des biens', vente: 'Contrats spéciaux', societes: 'Droit des sociétés' };
   function switchMatiere(id) {
     if (id === SITE.matiere) return;
     // on garde le thème choisi d'une matière à l'autre
@@ -80,7 +88,7 @@
 
   /* ---------- Coque ---------- */
   function shell() {
-    const nav = (cls) => h('nav', { class: cls, id: cls === 'tabs' ? 'tabs' : null, 'aria-label': 'Navigation principale' }, NAV.map(n => h('a', { href: '#/' + n[0], 'data-g': n[0], class: 'nav-a' }, icon(n[2], 22), h('span', null, n[1]))));
+    const nav = (cls) => h('nav', { class: cls, id: cls === 'tabs' ? 'tabs' : null, 'aria-label': 'Navigation principale' }, h('span', { class: 'nav-ind', 'aria-hidden': 'true' }), NAV.map(n => h('a', { href: '#/' + n[0], 'data-g': n[0], class: 'nav-a' }, icon(n[2], 22), h('span', null, n[1]))));
     const hud = h('div', { class: 'hud', id: 'hud' });
     const searchBtn = () => h('button', { class: 'icon-btn', type: 'button', onclick: Views.search, 'aria-label': 'Rechercher (touche /)', title: 'Rechercher' }, icon('search', 20));
     const themeBtn = () => h('button', { class: 'icon-btn theme-btn', type: 'button', onclick: toggleTheme });
@@ -98,6 +106,18 @@
     document.body.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter></svg>');
     ST.onHud(paintHud); paintHud();
   }
+  // La carte de l'onglet actif glisse jusqu'à sa nouvelle place
+  function placeInd() {
+    $$('.side-nav, #tabs').forEach(nav => {
+      const ind = $('.nav-ind', nav), on = $('.nav-a.on', nav); if (!ind) return;
+      if (!on || !on.offsetWidth) { ind.style.opacity = on ? '' : '0'; return; }
+      ind.style.opacity = '';
+      ind.style.setProperty('--x', on.offsetLeft + 'px'); ind.style.setProperty('--y', on.offsetTop + 'px');
+      ind.style.setProperty('--w', on.offsetWidth + 'px'); ind.style.setProperty('--h', on.offsetHeight + 'px');
+      if (!ind.classList.contains('ready')) requestAnimationFrame(() => requestAnimationFrame(() => ind.classList.add('ready')));
+    });
+  }
+  addEventListener('resize', () => requestAnimationFrame(placeInd));
   function paintHud() {
     const el = $('#hud'); if (!el) return;
     const s = S(), l = ST.levelOf(s.xp), p = (s.xp - ST.levelFloor(l)) / (ST.levelFloor(l + 1) - ST.levelFloor(l));
@@ -116,7 +136,9 @@
     const root = document.documentElement;
     root.classList.add('vt-nav'); vt = true;
     const t = document.startViewTransition(() => { try { go(); } finally { vt = false; } });
-    t.finished.finally(() => root.classList.remove('vt-nav'));
+    // une transition peut être annulée (rotation, barre d'adresse mobile qui change la hauteur) : sans gravité
+    t.ready.catch(() => {});
+    t.finished.catch(() => {}).finally(() => root.classList.remove('vt-nav'));
   }
   function go() {
     const hash = location.hash.replace(/^#\/?/, '');
@@ -127,6 +149,7 @@
     ST.clearKeys();
     const main = $('#main');
     $$('.nav-a').forEach(a => a.classList.toggle('on', a.dataset.g === (GROUP[key] != null ? GROUP[key] : '')));
+    placeInd();
     main.className = vt ? 'enter vt' : 'enter';
     cleanup = view(main, parts.slice(1)) || null;
     UI.animatePage(main);

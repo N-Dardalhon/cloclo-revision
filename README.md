@@ -14,9 +14,13 @@ Chaque fiche a un **sommaire à gauche** : tous les titres (sections, paragraphe
 Un sélecteur (en haut du menu) permet de passer d'une matière à l'autre. Chaque matière a sa propre progression (XP, séries, badges).
 - **Droit des biens** : `js/data/c1.js` … `c5.js`, schémas dans `js/data/trees.js`.
 - **Contrats spéciaux (la vente)** : `js/data/v1.js` … `v9.js`, schémas dans `js/data/trees-vente.js`.
+- **Droit des sociétés (mineure L3)** : `js/data/societes.js` (la matière et la liste des chapitres) et `js/data/s0.js` … `s9.js`, tirés des notes de cours partagées sur Google Drive ; épreuves dans `js/data/epreuves-societes.js`, schémas dans `js/data/trees-societes.js`.
+
+### Nouveaux cours depuis le Drive
+Dans Claude Code, taper **`/cours-drive`** (ou demander « récupère les cours de Julia ») : Claude télécharge le dossier Drive « Droit des sociétés » (partagé par lien), repère les leçons nouvelles ou complétées (empreintes dans `tools/societes_etat.json`), rédige leurs fiches, flashcards, QCM et glossaire, puis les inscrit sur le site avec `tools/drive_sync.py`. Aucune clé d'API : tout passe par l'abonnement Claude. Les consignes sont dans `.claude/skills/cours-drive/SKILL.md`.
 
 ## Épreuves type partiel
-Page Jouer → *Épreuves type partiel* : dissertations, commentaires, cas pratiques et questions, dont beaucoup **hors du cours** (servitudes, usufruit, indivision, vices cachés, droit de la consommation, CVIM…). Chaque sujet : analyse guidée du sujet (anti hors-sujet), kit de survie, plan corrigé, points attendus. Aussi : méthode anti hors-sujet et exercice « Lire un sujet ». Données : `js/data/epreuves-biens.js` et `js/data/epreuves-vente.js`.
+Page Jouer → *Épreuves type partiel* : dissertations, commentaires, cas pratiques et questions, dont beaucoup **hors du cours** (servitudes, usufruit, indivision, vices cachés, droit de la consommation, CVIM…). Chaque sujet : analyse guidée du sujet (anti hors-sujet), kit de survie, plan corrigé, points attendus. Aussi : méthode anti hors-sujet et exercice « Lire un sujet ». Données : `js/data/epreuves-biens.js`, `js/data/epreuves-vente.js` et `js/data/epreuves-societes.js`.
 
 ## Le prof (dans le cerveau caché)
 Bouton **Le prof** du cerveau (`js/prof.js`) : un tuteur qui raisonne sur tout le cours (fiches, cartes, articles, arrêts, pièges, épreuves). Il comprend l'intention (définition, différence entre deux notions, conditions, pourquoi, exemple, cas pratique, plan, « interroge-moi », « par quoi je commence »), tolère les fautes, se souvient du sujet, affiche son raisonnement pendant que les neurones s'allument, corrige les réponses écrites et retient les notions ratées.

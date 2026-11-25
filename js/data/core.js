@@ -51,6 +51,8 @@ window.MATIERES = [
     ]
   }
 ];
+// Droit des sociétés : déclaré dans js/data/societes.js (chapitres mis à jour depuis le Drive)
+if (window.MATIERE_SOCIETES) MATIERES.push(window.MATIERE_SOCIETES);
 (function () {
   let id = 'biens';
   try { id = localStorage.getItem('cloclo.matiere') || 'biens'; } catch (e) { }

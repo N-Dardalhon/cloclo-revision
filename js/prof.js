@@ -155,7 +155,8 @@
   /* ================= Indices dans les faits ================= */
   const FACTS = [
     [/\b\d+\s*(euros?|€)\s*symbolique|euro symbolique|prix (derisoire|ridicule|tres bas|insignifiant)|pour (presque )?rien|vil prix/, 'prix vil dérisoire prix sérieux'],
-    [/n.?(etait|est) pas (a lui|le sien|proprietaire)|appartient (a|en fait a) (son|sa|un|une)|chose d.?autrui|ne lui appartenait/, 'vente de la chose d autrui'],
+    [/n.?(etait|est) pas (a lui|a elle|le sien|la sienne|proprietaire)|appartient (en (fait|realite) )?a (?!lui\b|elle\b)|chose d.?autrui|ne lui appartenait/, 'vente de la chose d autrui'],
+    [/(tableau|bijou|montre|voiture|velo|meuble|bague|collier|livre|ordinateur|telephone|objet|statue|vase|piano|cheval).*bonne foi|bonne foi.*(tableau|bijou|montre|voiture|velo|meuble|bague|collier|livre|ordinateur|telephone|objet|statue|vase|piano|cheval)/, 'en fait de meubles la possession vaut titre art. 2276 possesseur de bonne foi meuble corporel'],
     [/depuis (plus de )?(\d+|dix|vingt|trente) ans|pendant (\d+|dix|vingt|trente) ans|occupe .* depuis/, 'usucapion prescription acquisitive possession'],
     [/trouve|perdu|vole|volee|brocante|occasion/, 'possession vaut titre art. 2276 perte vol revendication'],
     [/panne|ne (fonctionne|marche) (plus|pas)|defaut|vice|fissure|termite|cache/, 'garantie des vices cachés'],
@@ -197,7 +198,10 @@
     const n = norm(q).replace(/[’']/g, ' ').replace(/\s+/g, ' ');
     const hits = INTENTS.filter(([, re]) => re.test(n)).map(x => x[0]);
     const long = q.length > 170 || /\b(veut|souhaite|a vendu|a achete|a promis|decouvre|revendique|depuis \d+ ans|monsieur|madame|m\.|mme)\b/.test(n) && q.length > 90;
-    if (long && !hits.includes('quiz')) return { main: 'cas', all: hits };
+    // des personnages (Paul, Marie…) et une question : c'est un cas pratique
+    const people = new Set((q.match(/(?<![.?!]\s|^)\b[A-ZÉ][a-zéèëêïîôç]{2,}\b/g) || []).filter(w => !/^(Code|Cour|Cass|Civ|Art|Monsieur|Madame)$/.test(w)));
+    const story = people.size >= 2 && q.length > 60 && /\b(vend|vendu|achete|acquiert|cede|donne|prete|loue|promet|propose|trouve|construit|occupe|possede|appartient|revendique|recuper)/.test(n);
+    if ((long || story) && !hits.includes('quiz')) return { main: 'cas', all: hits };
     return { main: hits[0] || 'def', all: hits };
   }
 
@@ -219,7 +223,7 @@
   };
   const QLIKE = /^(explique|expliquer|resume|c est quoi|qu est|pourquoi|comment|de quoi|donne|dis moi|quel|quelle|quels|quelles|quand|est ce|peux tu|tu peux|parle moi|montre|apprends|raconte|et (si|pour|la|le|les|l) )/;
   const OVR = /(explique|expliquer|resume|resumer|presente|presenter|de quoi (ca )?(parle|traite)|c.?est quoi|qu.?est[- ]ce que|intro(duction)? (a|au|du|de)|vue d.?ensemble|grandes lignes|en gros|globalement|l.?essentiel|synthese|fais[- ]moi (le )?point|apprends[- ]moi|raconte|parle[- ]moi)/;
-  const MATRE = { biens: /droits? (des|de|du) biens?|\bles biens\b/, vente: /contrats? speciaux|droit de la vente|(cours|matiere) (sur|de) la vente/ };
+  const MATRE = { biens: /droits? (des|de|du) biens?|\bles biens\b/, vente: /contrats? speciaux|droit de la vente|(cours|matiere) (sur|de) la vente/, societes: /droits? des societes|\bles societes\b/ };
   function overviewScope(q) {
     const n = norm(q).replace(/[’']/g, ' ').replace(/\s+/g, ' ');
     if (!OVR.test(n)) return null;
@@ -693,8 +697,57 @@
       const qz = all.find(d => d.ask && d.kind === 'Article') || all.find(d => d.ask && d.kind !== 'Cas pratique');
       return { steps, blocks, speak: all[0] ? firstSentence(all[0].body) : '', chips: [qz && { label: 'Récite-le moi (je vérifie)', fn: () => quizItem(qz) }, c && { label: 'Explique ' + c.term, q: 'c\'est quoi ' + c.term }] };
     }
+    /* ---------- discussion : répondre comme une personne, pas comme un moteur de recherche ---------- */
+    const aiChip = () => LLM && !llmOn() && LLM.state.phase !== 'loading' ? { label: '✦ Activer la vraie IA', fn: activateLLM } : null;
+    const baseChips = () => [{ label: 'Interroge-moi', fn: () => quiz(null) }, { label: 'Fais-moi cours', fn: () => reply(lessonPicker('lesson')) }, { label: 'Par quoi je commence ?', q: 'par quoi je commence ?' }];
+    const JOKES = ['Pourquoi l\'usufruitier est-il toujours zen ? Parce qu\'il profite des fruits sans jamais toucher à la substance.',
+      'Un possesseur de mauvaise foi entre chez le juge. Le juge : « Trente ans ? » Lui : « Non, je viens juste d\'arriver. »',
+      'Quelle est la différence entre un pacte de préférence et un ex ? Le pacte, lui, te prévient avant de partir avec quelqu\'un d\'autre.',
+      'En fait de meubles, la possession vaut titre. En fait de partiels, la révision vaut mention.'];
+    function smallTalk(q) {
+      const n = norm(q).replace(/[’'?!.,]/g, ' ').replace(/\s+/g, ' ').trim(), name = nameOf();
+      const R = (blocks, chips) => ({ steps: [], blocks: blocks.map(b => typeof b === 'string' ? ['p', b] : b), chips: (chips || baseChips()).filter(Boolean) });
+      if (/(comment|quel(le)? est) (tu t appel|t appel|ton (pre)?nom)|tu t appel+e?s? comment|c est quoi ton (pre)?nom|ton petit nom|comment je (dois )?t appel/.test(n))
+        return R(['On m\'appelle simplement **le prof**. Je vis caché dans le cerveau de ton site, et je connais une seule chose par cœur : ton cours de L3.' + (name ? ' Toi, c\'est ' + name + ', je sais.' : ''), 'Alors, on travaille quoi ?']);
+      if (/^(ca va|comment (ca )?va|comment tu vas|tu vas bien|la forme|bien ou quoi|quoi de neuf)\b/.test(n))
+        return R(['Toujours en forme : un prof qui ne dort jamais, c\'est pratique pendant les partiels. Et toi, ça avance, les révisions ?', 'Si tu ne sais pas par où reprendre, je te dis où tu en es.']);
+      if (/(t es|tu es|es tu|t est) (un |une )?(robot|ia|intelligence artificielle|humain|vrai prof|vraie personne|chatgpt|bot|programme)|qui t a (cree|fait|code|programme)|qui (est|c est) ton (createur|papa)/.test(n))
+        return R([llmOn() ? 'Je suis un programme : un modèle de langage qui tourne sur ta carte graphique, et qui s\'appuie sur ton cours pour te répondre.' : 'Je suis un programme, pas un humain. En ce moment je tourne en **mode simple** : je fouille ton cours et j\'assemble ce qu\'il dit, mais je ne comprends pas vraiment les phrases hors du droit.', llmOn() ? 'Je peux me tromper : vérifie avec les sources que j\'affiche.' : 'Pour que je te comprenne vraiment, active la vraie IA : un modèle de langage gratuit qui tourne dans ton navigateur.'], [aiChip()].concat(baseChips()));
+      if (/(t es|tu es|t est|es) (trop )?(con|nul|nulle|bete|debile|idiot|stupide|naze|inutile|claque|teube)|ta gueule|tu sers a rien|tu comprends rien|tu captes rien|t as rien compris|c est nul/.test(n))
+        return R(['Pas faux, je le prends. ' + (llmOn() ? 'Reformule ta question, je fais mieux cette fois.' : 'En mode simple, je ne comprends que les questions sur ton cours : une notion, une différence, un article, un cas pratique.'), llmOn() ? '' : 'Pour un prof qui comprend n\'importe quelle phrase, active la vraie IA ci-dessous.'].filter(Boolean), [aiChip()].concat(baseChips()));
+      if (/blague|fais moi rire|un truc drole|raconte moi (un|une) (truc|histoire) drole/.test(n))
+        return R([pick(JOKES), 'Bon. On retourne travailler ?'], [{ label: 'Une autre', q: 'une autre blague' }].concat(baseChips()));
+      if (/je t aime|tu m aimes|t es (mignon|beau|gentil|chou)|bisou|je t adore/.test(n))
+        return R(['Moi aussi je t\'aime bien, surtout quand tu révises. Prouve-le : trois questions, tout de suite ?'], [{ label: 'Vas-y', fn: () => quiz(null) }]);
+      if (/j en ai marre|je suis (trop )?(fatigue|creve|epuise|perdu|perdue|stresse|stressee|nul|nulle|degoute|degoutee)|j y arrive pas|j ai pas envie|la flemme|flemme|demotiv|je vais rater|je vais pas y arriver|j ai peur/.test(n))
+        return R(['C\'est normal, les partiels usent tout le monde. On ne va pas tout revoir d\'un coup : **dix minutes**, une seule notion, et tu t\'arrêtes si tu veux.', 'Le plus efficace quand on est fatigué : se faire interroger. Ça demande moins d\'effort que relire, et ça marche mieux.'], [{ label: 'Dix minutes de questions', fn: () => quiz(null) }, { label: 'Apprends-moi un truc', q: 'apprends-moi quelque chose' }, { label: 'Où j\'en suis ?', q: 'par quoi je commence ?' }]);
+      if (/^(tu sers a quoi|tu fais quoi|tu peux faire quoi|qu est ce que tu (sais|peux) faire|que sais tu faire|aide moi|aide|help|comment (ca|tu) marche)$/.test(n)) return greet();
+      if (/^(ok|okay|d accord|ah|ah bon|mdr|lol|ptdr|haha+|hihi|oui|non|bof|cool|nice|grave|ouais|wesh|hmm+|euh+)$/.test(n))
+        return R([pick(['On continue ?', 'Je t\'écoute.', 'Dis-moi ce que tu veux travailler.'])]);
+      return null;
+    }
+    // Un passage ne compte que s'il contient vraiment des mots de la question (sinon : hors sujet)
+    const EVERYDAY = new Set(('aujourd hui demain hier heure heur matin soir nuit temp meteo beau pluie fait faire ver mang manger dormi dormir film musiqu jeu jou chat chien ami amie copain copin famil maman papa ecol week weekend vacanc travail boulot argent').split(' ').map(stem));
+    function relevant(d, q) {
+      if (!d) return false;
+      const fx = new Map((idx.expand(q).fixed || []).map(([a, b]) => [stem(norm(a)), toks(b)]));
+      const qt = [...new Set(toks(q))].filter(w => w.length > 3 && !GENERIC.has(w) && !EVERYDAY.has(w));
+      if (!qt.length) return false;
+      const dt = new Set(toks(plain(d.title) + ' ' + plain(d.body)));
+      const has = set => w => set.has(w) || (fx.get(w) || []).some(x => set.has(x));
+      const hit = qt.filter(has(dt)).length, tt = new Set(toks(plain(d.title)));
+      if (hit >= 2) return true;
+      return hit === 1 && qt.filter(has(tt)).length >= 1 && qt.length <= 2; // un seul mot commun : il doit être dans le titre
+    }
+    function offTopic(q) {
+      return { steps: [{ t: 'Je cherche dans tout ton cours… rien ne parle de ça' }],
+        blocks: [['p', 'Là, je sèche : ' + (llmOn() ? '' : 'en mode simple ') + 'je ne connais que **ton cours** (droit des biens et contrats spéciaux), et je ne vois pas le lien avec ta question.'],
+          ['p', Claude.ready() ? 'Reformule avec les mots du cours, ou précise ce que tu veux savoir.' : 'Reformule avec les mots du cours (« possession », « art. 1583 », « différence entre… »). Pour que je comprenne n\'importe quelle question, même hors cours, active la **vraie IA** ou le mode Claude (⚙).']],
+        chips: [aiChip()].concat(baseChips()).filter(Boolean) };
+    }
     function fallback(q) {
       const res = idx.search(q, 6);
+      if (res.length && !relevant(res[0], q)) return offTopic(q);
       if (!res.length) return { steps: [{ t: 'Je cherche dans tout le cours… rien ne correspond' }], blocks: [['p', 'Je ne trouve rien sur « ' + q + ' » dans ton cours. Essaie avec un mot-clé (« réméré », « lésion », « art. 1583 »…), ou ' + (Claude.ready() ? 'reformule.' : 'branche le mode Claude (bouton ⚙) pour les questions hors cours.')]] };
       const best = res[0];
       const { fixed } = idx.expand(q);
@@ -719,7 +772,7 @@
         return { steps: [{ t: 'Je comprends que tu veux la **vue d\'ensemble** du chapitre ' + c.n + ' (' + c.short + ')' }, { t: 'Je relis l\'introduction et le plan de la fiche : ' + seqs.length + ' parties', docs: docs.filter(d => d.ch === sc.ch).slice(0, 12) }, defs.length ? { t: 'Je sélectionne les ' + defs.length + ' définitions incontournables' } : null], blocks, speak: plain(intro || c.title),
           chips: [{ label: 'Oui, fais-moi le cours', fn: () => lessonStart(sc.ch) }, { label: 'Je le restitue', fn: () => restitStart(sc.ch, null) }, { label: 'Interroge-moi dessus', q: 'interroge-moi sur le chapitre ' + c.n }] };
       }
-      const M = MATIERES.find(m => m.id === sc.mat), F = FIL[M.id];
+      const M = MATIERES.find(m => m.id === sc.mat), F = FIL[M.id] || M.fil;
       const L = hooks.lobes().filter(l => l.mat === M).slice().sort((a, b) => a.m - b.m)[0];
       const blocks = F.intro.map(t => ['p', t]);
       blocks.push(['h', 'Comment le cours est construit']);
@@ -747,7 +800,7 @@
       return 'CHAPITRE ' + c.n + ' (' + c.M.title + ') : ' + c.title + '\nIntroduction : ' + plain(introOf(ch)) + '\nPlan :\n' + seqs.filter(gist).slice(0, 10).map((x, i) => (i + 1) + '. ' + x.title + ' — ' + gist(x)).join('\n') + '\nDéfinitions :\n' + keyDefs(ch).slice(0, 6).map(e => '- ' + e.term + ' : ' + firstSentence(e.def)).join('\n');
     }
     function matiereCtx(mid) {
-      const M = MATIERES.find(m => m.id === mid), F = FIL[mid];
+      const M = MATIERES.find(m => m.id === mid), F = FIL[mid] || M.fil;
       return 'MATIÈRE : ' + M.title + '\nFil rouge : ' + plain(F.intro.join(' ')) + '\nChapitres :\n' + M.chapters.map(c => '- ch. ' + c.n + ' ' + c.title + ' (' + c.blurb + ') : ' + firstSentence(introOf(c.id)).slice(0, 240)).join('\n') + '\nNotions de base :\n' + F.keys.map(k => U.lookup(k)).filter(Boolean).map(e => '- ' + e.term + ' : ' + firstSentence(e.def)).join('\n');
     }
     function ragFor(q, sc) {
@@ -1057,6 +1110,7 @@ Tes règles :
       if (conv.pending && conv.pending.type === 'cas' && q.length > 25 && !/\?$/.test(q)) return gradeCas(q);
       if (/^(stop|arrete)/.test(n)) { conv.pending = null; return { blocks: ['D\'accord, on arrête là.'] }; }
       if (/^(un )?indice\b|^aide\b/.test(n)) return { blocks: ['Un indice sur quoi ? Dis « **interroge-moi** » et je te pose une question ; là, je pourrai t\'aider.'], chips: [{ label: 'Interroge-moi', fn: () => quiz(conv.topic) }] };
+      if (!llmOn() || noLLM) { const st = smallTalk(q); if (st) return st; }
       const it = intentOf(q);
       let found = uniqBy(concepts(stripFollow(q)).filter(c => !(c.key.split(' ').length === 1 && GENERIC.has(c.key))), c => norm(c.term));
       const FOLLOW = ['why', 'example', 'arret', 'article', 'trap', 'more', 'simpler', 'conditions', 'effects'];
@@ -1090,7 +1144,7 @@ Tes règles :
       if (!found.length && shortFollow) found = [conv.topic];
       if (!found.length) { // la recherche peut révéler la notion
         const r = idx.search(q, 3), c = r[0] && (r[0].kind === 'Définition' ? concepts(r[0].title) : concepts(plain(r[0].title)));
-        if (c && c[0] && (it.main !== 'def' || toks(q).length <= 4)) found = [c[0]];
+        if (c && c[0] && relevant(r[0], q) && toks(c[0].term).some(w => toks(q).includes(w)) && (it.main !== 'def' || toks(q).length <= 4)) found = [c[0]];
       }
       if (!found.length) return fallback(q);
       const t = found[0]; setTopic(t);
@@ -1184,7 +1238,7 @@ Comment tu travailles :
 - Format : réponses denses et lisibles, sans titres Markdown. Paragraphes courts, **gras** pour les notions clés, listes à puces « - » si utile. En général moins de 250 mots, sauf cas pratique ou plan.`;
     }
     const TOOLS = [
-      { name: 'chercher_cours', description: 'Recherche plein texte dans les deux cours (fiches, flashcards, articles, arrêts, définitions, pièges, épreuves type partiel). Tolère les fautes. Renvoie les passages les plus pertinents avec leur identifiant. À appeler avant de répondre sur le fond.', input_schema: { type: 'object', properties: { requete: { type: 'string', description: 'Mots-clés ou question (ex : « pacte de préférence sanction », « art. 1583 »).' }, nombre: { type: 'integer', description: 'Nombre de passages (1 à 12, défaut 6).' } }, required: ['requete'], additionalProperties: false } },
+      { name: 'chercher_cours', description: 'Recherche plein texte dans tous les cours (fiches, flashcards, articles, arrêts, définitions, pièges, épreuves type partiel). Tolère les fautes. Renvoie les passages les plus pertinents avec leur identifiant. À appeler avant de répondre sur le fond.', input_schema: { type: 'object', properties: { requete: { type: 'string', description: 'Mots-clés ou question (ex : « pacte de préférence sanction », « art. 1583 »).' }, nombre: { type: 'integer', description: 'Nombre de passages (1 à 12, défaut 6).' } }, required: ['requete'], additionalProperties: false } },
       { name: 'lire_fiche', description: 'Lit la fiche de révision complète d\'un chapitre (identifiant comme « c3 » ou « v5 »). Utile pour une question large ou un plan.', input_schema: { type: 'object', properties: { chapitre: { type: 'string', description: 'Identifiant du chapitre.' } }, required: ['chapitre'], additionalProperties: false } },
       { name: 'etat_eleve', description: 'Progression de l\'étudiante : maîtrise par chapitre, rappels en retard, notions ratées, date du partiel.', input_schema: { type: 'object', properties: {}, additionalProperties: false } },
       { name: 'question_du_cours', description: 'Tire une question d\'entraînement du cours (avec sa réponse attendue, à NE PAS montrer avant qu\'elle réponde). Sur un chapitre ou une notion, sinon parmi ce qu\'elle doit revoir.', input_schema: { type: 'object', properties: { chapitre: { type: 'string', description: 'Identifiant du chapitre (facultatif).' }, notion: { type: 'string', description: 'Notion visée (facultatif).' } }, additionalProperties: false } },

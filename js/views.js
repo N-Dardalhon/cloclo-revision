@@ -32,7 +32,7 @@
       h('div', { class: 'hero-text' },
         h('h1', null, name ? `${hello} ${name}.` : 'Ton cours de ' + SITE.title.toLowerCase() + ', en parcelles.'),
         h('p', { class: 'lede' }, mission),
-        h('div', { class: 'row-actions' }, cta, h('a', { class: 'btn', href: '#/epreuves' }, 'S\'entraîner au partiel'), h('a', { class: 'btn', href: '#/jouer' }, 'Tous les jeux')),
+        h('div', { class: 'row-actions' }, cta, (((window.EPREUVES || {})[SITE.matiere] || { sujets: [] }).sujets.length ? h('a', { class: 'btn', href: '#/epreuves' }, 'S\'entraîner au partiel') : h('a', { class: 'btn', href: '#/glossaire' }, 'Réviser les définitions')), h('a', { class: 'btn', href: '#/jouer' }, 'Tous les jeux')),
         h('dl', { class: 'quick-stats' },
           h('div', null, h('dt', null, 'Série'), h('dd', null, ST.currentStreak() + (ST.currentStreak() > 1 ? ' jours' : ' jour'))),
           h('div', null, h('dt', null, 'XP'), h('dd', null, S().xp)),
@@ -111,7 +111,7 @@
   }
   // « Section 2 — Les prérogatives » → ['Section 2', 'Les prérogatives']
   function splitHead(t) {
-    const m = plain(t).match(/^((?:Section|Chapitre|Titre|Partie|Sous-section)\s+\d+|§\s*\d+|[IVX]+\.|[A-H]\.|\d+\.|\d+(?=\s*[—–:-]))\s*[—–:-]?\s*(.+)$/);
+    const m = plain(t).match(/^((?:Section|Chapitre|Titre|Partie|Sous-section)\s+\d+|§\s*\d+|[IVX]+\.|[IVX]+(?=\s+[—–-])|[A-H]\.|\d+\.|\d+(?=\s*[—–:-]))\s*[—–:-]?\s*(.+)$/);
     return m ? [m[1].replace(/\s+/g, ' '), m[2]] : [null, plain(t)];
   }
   const minutes = n => n < 1 ? 'moins d’une minute' : n + ' min';
@@ -136,7 +136,7 @@
     };
     const link = (t, n) => {
       let [k, title] = splitHead(t.t);
-      if (t.l === 'h2' && /^\d+\.?$/.test(k || '')) k = null; // le numéro est déjà dans la pastille
+      if (t.l === 'h2' && /^(\d+|[IVX]+)\.?$/.test(k || '')) k = null; // le numéro est déjà dans la pastille
       const a = h('a', { href: '#/fiche/' + c.id + '/' + t.id, class: 'toc-a ' + t.l, 'data-id': t.id, onclick(e) { e.preventDefault(); jump(t.id, true); closeDrawer(); } },
         t.l === 'h2' ? h('span', { class: 'toc-dot', 'aria-hidden': 'true' }, n) : null,
         h('span', { class: 'toc-t' }, k ? h('small', null, k) : null, title));
@@ -207,7 +207,7 @@
       // garde le titre actif visible dans le sommaire, sans faire défiler la page
       if (curA && !side.classList.contains('open') && side.scrollHeight > side.clientHeight) {
         const r = curA.getBoundingClientRect(), s = side.getBoundingClientRect();
-        if (r.top < s.top + 60 || r.bottom > s.bottom - 60) side.scrollTo({ top: side.scrollTop + r.top - s.top - s.height / 3, behavior: 'smooth' });
+        if (r.top < s.top + 60 || r.bottom > s.bottom - 60) side.scrollTop += r.top - s.top - s.height / 3;
       }
     }
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(paint); };
@@ -246,7 +246,8 @@
       ['list', 'Questions de cours', 'Rédige, compare, auto-évalue.', '#/questions', DATA.coursq.length + ' sujets'],
       ['clock', 'Examen blanc', '20 questions, un chrono, une note.', '#/examen', S().exam.length ? 'Dernier : ' + S().exam[S().exam.length - 1].score + '/20' : 'Jamais tenté']
     ];
-    box.replaceChildren(h('div', { class: 'wrap' }, head('Jouer', 'Neuf façons de réviser. Alterne : ton cerveau retient mieux quand le format change.'),
+    if (!nEp) g.shift(); // pas de sujets d'examen pour cette matière
+    box.replaceChildren(h('div', { class: 'wrap' }, head('Jouer', (nEp ? 'Neuf' : 'Huit') + ' façons de réviser. Alterne : ton cerveau retient mieux quand le format change.'),
       h('div', { class: 'tiles big' }, g.map(t => h('a', { class: 'tile', href: t[3] }, h('span', { class: 'tile-i' }, icon(t[0], 24)), h('b', null, t[1]), h('small', null, t[2]), h('em', null, t[4]))))));
   }
 

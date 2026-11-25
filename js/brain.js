@@ -101,11 +101,14 @@
   function geometry(items) {
     const R = rng(20261104), gauss = () => { let u = 0; while (!u) u = R(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * R()); };
     const lobes = [];
-    MATIERES.forEach((M, mi) => {
-      const hemi = mi === 0 ? -1 : 1, k = M.chapters.length, cols = Math.ceil(k / 2);
-      M.chapters.forEach((c, j) => {
-        const col = Math.floor(j / 2), row = j % 2;
-        const dir = nrm([hemi * .85, row ? -.3 : .5, .92 - 1.84 * (col + .5) / cols]);
+    // la 1re matière occupe l'hémisphère gauche, les suivantes se partagent le droit
+    const sides = { '-1': [], '1': [] };
+    MATIERES.forEach((M, mi) => M.chapters.forEach(c => sides[mi === 0 ? '-1' : '1'].push({ M, c })));
+    [-1, 1].forEach(hemi => {
+      const L = sides[hemi], k = L.length, rows = k > 12 ? 3 : 2, cols = Math.ceil(k / rows), ys = rows === 2 ? [.5, -.3] : [.62, .12, -.42];
+      L.forEach(({ M, c }, j) => {
+        const col = Math.floor(j / rows), row = j % rows;
+        const dir = nrm([hemi * .85, ys[row], .92 - 1.84 * (col + .5) / cols]);
         lobes.push({ ch: c.id, chap: c, mat: M, hemi, dir, nodes: [] });
       });
     });
@@ -191,11 +194,11 @@
       h('button', { type: 'button', class: 'b-mode ghost', onclick: resetView }, 'Vue d\'ensemble'));
     const dock = h('form', { class: 'b-dock', onsubmit(e) { e.preventDefault(); ask(input.value); } }, h('div', { class: 'b-askrow' }, input, micBtn, voiceBtn), modes);
     const legend = h('nav', { class: 'b-legend', 'aria-label': 'Lobes' }, MATIERES.map((M, mi) => h('div', { class: 'b-lg' },
-      h('b', null, (mi === 0 ? 'Hémisphère gauche' : 'Hémisphère droit')), h('small', null, M.title),
+      h('b', null, (mi === 0 ? 'Hémisphère gauche' : MATIERES.length < 3 ? 'Hémisphère droit' : mi === 1 ? 'Hémisphère droit, à l\'avant' : 'Hémisphère droit, à l\'arrière')), h('small', null, M.title),
       G.lobes.filter(L => L.mat === M).map(L => h('button', { type: 'button', class: 'b-lobe', style: { '--c': L.chap.col }, onclick: () => focusLobe(L) }, h('i'), h('span', null, L.chap.n + '. ' + L.chap.short), h('em', null, Math.round(L.m * 100) + ' %'))))));
     const total = items.length;
     const head = h('header', { class: 'b-head' },
-      h('div', null, h('p', { class: 'b-kicker' }, 'Planche I · pièce secrète'), h('h1', null, 'Le cerveau de ' + (ST.S.name || SITE.name || 'toi')), h('p', { class: 'b-cap' }, total + ' neurones, un par carte, article, arrêt ou définition. Les ponts dorés relient les articles communs aux deux cours.')),
+      h('div', null, h('p', { class: 'b-kicker' }, 'Planche I · pièce secrète'), h('h1', null, 'Le cerveau de ' + (ST.S.name || SITE.name || 'toi')), h('p', { class: 'b-cap' }, total + ' neurones, un par carte, article, arrêt ou définition. Les ponts dorés relient les articles communs entre les cours.')),
       h('div', { class: 'b-tools' },
         h('button', { class: 'b-ico', type: 'button', title: 'Réglages du prof', 'aria-label': 'Réglages du prof', onclick: openSettings }, gearSvg()),
         h('button', { class: 'b-ico', type: 'button', title: 'Planche claire ou sombre', 'aria-label': 'Changer de planche', onclick() { const d = document.documentElement; const nd = d.dataset.theme !== 'dark'; d.dataset.theme = nd ? 'dark' : 'light'; ST.S.prefs.dark = nd; ST.save(); } }, icon('moon', 18)),

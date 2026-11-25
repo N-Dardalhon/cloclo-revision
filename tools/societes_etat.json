@@ -1,0 +1,205 @@
+{
+ "dossier": "1Kfb7Zg47Gu5Qe7ztEj_RGbu_anOGPKBQ",
+ "parts": [
+  [
+   "Introduction",
+   [
+    [
+     "La matière et ses sources",
+     [
+      "s0"
+     ]
+    ]
+   ]
+  ],
+  [
+   "Partie 1 · La formation de la société",
+   [
+    [
+     "Qu'est-ce qu'une société ?",
+     [
+      "s1",
+      "s2"
+     ]
+    ],
+    [
+     "Pourquoi, sous quelle forme et comment ?",
+     [
+      "s3",
+      "s4",
+      "s5"
+     ]
+    ],
+    [
+     "Avant l'immatriculation",
+     [
+      "s6"
+     ]
+    ]
+   ]
+  ],
+  [
+   "Partie 2 · La vie de la société",
+   [
+    [
+     "Les associés",
+     [
+      "s7",
+      "s8"
+     ]
+    ],
+    [
+     "Les dirigeants",
+     [
+      "s9"
+     ]
+    ]
+   ]
+  ]
+ ],
+ "chapitres": {
+  "s0": {
+   "part": "Introduction",
+   "title": "Introduction : la matière et ses sources",
+   "short": "Introduction",
+   "blurb": "définition, sources normatives, jurisprudence, usages, évolutions",
+   "col": "#9BB8E8",
+   "n": 0,
+   "src": [
+    "(1) 07.09.2026",
+    "(2) 08.09.2026"
+   ],
+   "hash": "9fe334610adc2e8b",
+   "mode": "main"
+  },
+  "s1": {
+   "part": "Partie 1 · Leçon 1",
+   "title": "Qu'est-ce qu'une société ?",
+   "short": "La société",
+   "blurb": "fiction ou réalité, personne ou bien, art. 1832, société créée de fait",
+   "col": "#F2A6A0",
+   "n": 1,
+   "src": [
+    "(2) 08.09.2026",
+    "(3) 09.09.2026",
+    "(4) 21.09.2026"
+   ],
+   "hash": "b05b19a347a942d9",
+   "mode": "main"
+  },
+  "s2": {
+   "part": "Partie 1 · Leçon 2",
+   "title": "Les structures concurrentes des sociétés",
+   "short": "Concurrentes",
+   "blurb": "association, GIE, entreprise individuelle, succursale, indivision, fiducie",
+   "col": "#F3CE72",
+   "n": 2,
+   "src": [
+    "(4) 21.09.2026",
+    "(5) 22.09.2026"
+   ],
+   "hash": "8ace977e3f119e78",
+   "mode": "main"
+  },
+  "s3": {
+   "part": "Partie 1 · Leçon 3",
+   "title": "Pourquoi créer une société ?",
+   "short": "Pourquoi",
+   "blurb": "raisons affichées, avouées et cachées : organisation, écran social, fiscalité",
+   "col": "#B9A6EB",
+   "n": 3,
+   "src": [
+    "(6) 23.09.2026",
+    "(7) 29.09.2026"
+   ],
+   "hash": "72f5634ce97528a8",
+   "mode": "main"
+  },
+  "s4": {
+   "part": "Partie 1 · Leçon 4",
+   "title": "Quelle forme sociale choisir ?",
+   "short": "Forme",
+   "blurb": "sociétés civiles, commerciales, hybrides ; facteurs et aménagements du choix",
+   "col": "#9ED08A",
+   "n": 4,
+   "src": [
+    "(7) 29.09.2026",
+    "(8) 07.10.2026"
+   ],
+   "hash": "a5928eb14556eb96",
+   "mode": "main"
+  },
+  "s5": {
+   "part": "Partie 1 · Leçon 5",
+   "title": "Comment créer une société ?",
+   "short": "Création",
+   "blurb": "statuts, mentions obligatoires, capital, annonce légale, immatriculation",
+   "col": "#8CC6EC",
+   "n": 5,
+   "src": [
+    "(8) 07.10.2026",
+    "(9) 13.10.2026"
+   ],
+   "hash": "188aa8e7375ea6f7",
+   "mode": "main"
+  },
+  "s6": {
+   "part": "Partie 1 · Leçon 6",
+   "title": "Les risques de la période de formation",
+   "short": "Formation",
+   "blurb": "désengagement, actes accomplis pour la société en formation, reprise, biens",
+   "col": "#F5B38A",
+   "n": 6,
+   "src": [
+    "(9) 13.10.2026",
+    "(10) 14.10.2026",
+    "(11) 20.10.2026",
+    "(12) 21.10.2026"
+   ],
+   "hash": "a4dbfe069a5cd794",
+   "mode": "main"
+  },
+  "s7": {
+   "part": "Partie 2 · Leçon 7",
+   "title": "Les droits des associés",
+   "short": "Droits",
+   "blurb": "rester associé, information, vote, abus de majorité, dividendes, retrait",
+   "col": "#E9A6D2",
+   "n": 7,
+   "src": [
+    "(12) 21.10.2026",
+    "(13) 10.11.2026",
+    "(14) 18.11.2026"
+   ],
+   "hash": "1a37d6536bc9e4b3",
+   "mode": "main"
+  },
+  "s8": {
+   "part": "Partie 2 · Leçon 8",
+   "title": "Les devoirs des associés",
+   "short": "Devoirs",
+   "blurb": "libération et garantie des apports, obligation aux dettes, clauses léonines",
+   "col": "#A9DCD0",
+   "n": 8,
+   "src": [
+    "(15) 24.11.2026",
+    "(16) 25.11.2026"
+   ],
+   "hash": "47dacc8fd656ce09",
+   "mode": "main"
+  },
+  "s9": {
+   "part": "Partie 2 · Leçon 9",
+   "title": "Les pouvoirs des dirigeants",
+   "short": "Dirigeants",
+   "blurb": "dirigeants légaux, plénitude de pouvoirs, capacité, compétence, représentation",
+   "col": "#D8CF7E",
+   "n": 9,
+   "src": [
+    "(16) 25.11.2026"
+   ],
+   "hash": "5be3c36ce0487148",
+   "mode": "main"
+  }
+ }
+}

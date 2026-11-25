@@ -149,7 +149,7 @@
       clip.append(rect); defs.append(clip);
       a.append(svg('path', { d, class: 'p-base' }));
       a.append(svg('path', { d, class: 'p-fill', fill: c.col, 'clip-path': `url(#clip-${c.id})` }));
-      a.append(svg('path', { d, class: 'p-line' }));
+      a.append(svg('path', { d, class: 'p-line', pathLength: 1 }));
       sh.forEach(p => a.append(svg('rect', { x: p[0] - 3.5, y: p[1] - 3.5, width: 7, height: 7, class: 'borne' })));
       const lx = cx, ly = cy;
       a.append(svg('text', { x: lx, y: ly - 4, 'text-anchor': 'middle', class: 'p-num' }, c.n));
@@ -286,9 +286,24 @@
   }
   // Après chaque changement de page : listes qui arrivent en cascade, chiffres qui défilent
   const STAGGER = '.tiles, .chap-list, .list-stack, .grid.cases, .quick-stats, .juris-list, .bp-title, .cards-choice';
+  // Halo qui suit le pointeur sur les cartes
+  document.addEventListener('pointermove', e => {
+    const t = e.target.closest && e.target.closest('.tile, .case-card'); if (!t) return;
+    const r = t.getBoundingClientRect();
+    t.style.setProperty('--mx', (e.clientX - r.left) + 'px'); t.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  }, { passive: true });
+  // Grands titres : chaque mot arrive à son tour
+  function splitWords(el) {
+    if (!el || el.dataset.split || [...el.childNodes].some(n => n.nodeType !== 3)) return;
+    el.dataset.split = 1;
+    const words = el.textContent.split(/(\s+)/);
+    let i = 0;
+    el.replaceChildren(...words.map(w => /^\s+$/.test(w) || !w ? w : h('span', { class: 'w', style: { '--wi': i++ } }, w)));
+  }
   function animatePage(root) {
     root.querySelectorAll(STAGGER).forEach(list => [...list.children].forEach((el, i) => el.style.setProperty('--i', Math.min(i, 14))));
     if (calm()) return;
+    root.querySelectorAll('.page-head h1, .fiche-head h1, .hero h1').forEach(splitWords);
     root.querySelectorAll('.quick-stats dd').forEach(dd => {
       const m = dd.textContent.match(/^(\d+)(.*)$/s); if (!m || +m[1] < 2) return;
       const end = +m[1], rest = m[2], t0 = performance.now(), dur = Math.min(1100, 500 + end * 8);

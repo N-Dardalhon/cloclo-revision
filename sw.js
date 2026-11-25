@@ -1,6 +1,6 @@
 /* Cache réseau d'abord : le site fonctionne hors ligne après une première visite.
    Les autres caches (le modèle d'IA locale, gardé par WebLLM) ne sont jamais effacés ici. */
-const CACHE = 'cloclo-revision-v13';
+const CACHE = 'cloclo-revision-v14';
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k.startsWith('cloclo-revision')).map(k => caches.delete(k)))).then(() => self.clients.claim()));
