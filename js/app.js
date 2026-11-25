@@ -108,7 +108,16 @@
   }
 
   /* ---------- Routage ---------- */
-  let cleanup = null;
+  let cleanup = null, vt = false;
+  // Changement de page animé (View Transitions) quand le navigateur sait le faire
+  function route() {
+    const key = location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
+    if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('brain-on') || key === 'cerveau') { go(); return; }
+    const root = document.documentElement;
+    root.classList.add('vt-nav'); vt = true;
+    const t = document.startViewTransition(() => { try { go(); } finally { vt = false; } });
+    t.finished.finally(() => root.classList.remove('vt-nav'));
+  }
   function go() {
     const hash = location.hash.replace(/^#\/?/, '');
     const parts = hash.split('?')[0].split('/').filter(Boolean).map(decodeURIComponent);
@@ -118,8 +127,9 @@
     ST.clearKeys();
     const main = $('#main');
     $$('.nav-a').forEach(a => a.classList.toggle('on', a.dataset.g === (GROUP[key] != null ? GROUP[key] : '')));
-    main.className = 'enter';
+    main.className = vt ? 'enter vt' : 'enter';
     cleanup = view(main, parts.slice(1)) || null;
+    UI.animatePage(main);
     const ts = $('.top-switch'); if (ts) ts.hidden = !!key && key !== 'home';
     window.scrollTo(0, 0);
     document.title = (key ? key.charAt(0).toUpperCase() + key.slice(1) + ' · ' : '') + SITE.title;
@@ -143,7 +153,7 @@
   /* ---------- Démarrage ---------- */
   shell(); applyTheme();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S().prefs.dark == null) applyTheme(); });
-  addEventListener('hashchange', go);
+  addEventListener('hashchange', route);
   document.addEventListener('keydown', e => {
     if (e.target.closest && e.target.closest('input,textarea,select')) return;
     if (e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) { e.preventDefault(); Views.search(); }

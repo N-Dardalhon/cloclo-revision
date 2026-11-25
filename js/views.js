@@ -8,6 +8,7 @@
   const tag = id => { const c = chap(id); return h('span', { class: 'tag', style: { '--c': c.col } }, h('i'), 'Ch. ' + c.n + ' · ' + c.short); };
   const head = (title, lede, back) => h('header', { class: 'page-head' }, back ? h('a', { class: 'back', href: back.href }, icon('left', 16), back.label) : null, h('h1', null, title), lede ? h('p', { class: 'lede' }, lede) : null);
   const only = id => { S().prefs.chapters = [id]; ST.save(); };
+  const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const allItems = () => [...DATA.cards, ...DATA.qcm, ...DATA.vf];
 
   /* ================= ACCUEIL ================= */
@@ -90,8 +91,11 @@
     if (t === 'intro') return h('p', { class: 'f-intro', html: md(b[1]) });
     if (t === 'mnemo') return h('div', { class: 'mnemo' }, h('div', { class: 'mnemo-k' }, b[1]), h('p', { html: md(b[2]) }));
     if (t === 'plan') return planEl(b[1]);
-    if (t === 'h2' || t === 'h3') { const id = slug(b[1]); toc.push({ id, t: b[1], l: t }); return h(t, { id, html: md(b[1]) }); }
-    if (t === 'h4') return h('h4', { html: md(b[1]) });
+    if (t === 'h2' || t === 'h3' || t === 'h4') {
+      let id = slug(b[1]) || 'section', k = 2; const base = id;
+      while (toc.some(x => x.id === id)) id = base + '-' + k++;
+      toc.push({ id, t: b[1], l: t }); return h(t, { id, html: md(b[1]) });
+    }
     if (t === 'p') return h('p', { html: md(b[1]) });
     if (t === 'ul') return h('ul', { class: 'f-ul' }, b[1].map(x => h('li', { html: md(x) })));
     if (t === 'def') return h('div', { class: 'f-def' }, h('b', null, b[1]), h('span', { html: md(b[2]) }));
@@ -105,38 +109,110 @@
     if (t === 'pair') return h('div', { class: 'pair' }, b[1].map(s => h('div', { class: 'pair-i' }, h('b', { html: md(s[0]) }), h('p', { html: md(s[1]) }))));
     return h('p', null, '');
   }
+  // « Section 2 — Les prérogatives » → ['Section 2', 'Les prérogatives']
+  function splitHead(t) {
+    const m = plain(t).match(/^((?:Section|Chapitre|Titre|Partie|Sous-section)\s+\d+|§\s*\d+|[IVX]+\.|[A-H]\.|\d+\.|\d+(?=\s*[—–:-]))\s*[—–:-]?\s*(.+)$/);
+    return m ? [m[1].replace(/\s+/g, ' '), m[2]] : [null, plain(t)];
+  }
+  const minutes = n => n < 1 ? 'moins d’une minute' : n + ' min';
+
   function fiche(box, args) {
     const c = chap(args[0]); if (!c || !DATA.fiche[c.id]) { location.hash = '#/cours'; return; }
     const toc = []; const body = h('div', { class: 'fiche-body' }, DATA.fiche[c.id].map(b => block(b, toc)));
     const idx = DATA.chapters.indexOf(c), prev = DATA.chapters[idx - 1], next = DATA.chapters[idx + 1];
+    const words = (body.textContent.match(/\S+/g) || []).length, readMin = Math.max(1, Math.round(words / 200));
     const readBtn = h('button', { class: 'btn primary', type: 'button', onclick() { if (!S().read[c.id]) { S().read[c.id] = Date.now(); ST.save(); ST.gain(20); UI.toast('Fiche relue, +20 XP'); UI.confetti(40); } readBtn.textContent = 'Fiche relue'; readBtn.disabled = true; } }, S().read[c.id] ? 'Fiche relue' : 'J\'ai relu cette fiche');
     readBtn.disabled = !!S().read[c.id];
-    const side = h('nav', { class: 'toc', 'aria-label': 'Sommaire' }, h('b', null, 'Sommaire'), toc.map(t => h('a', { href: 'javascript:void 0', class: t.l, 'data-id': t.id, onclick(e) { e.preventDefault(); document.getElementById(t.id).scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, plain(t.t))));
+
+    /* ----- Sommaire (colonne de gauche ; tiroir sur petit écran) ----- */
+    const secs = []; // une entrée par h2, avec ses sous-titres
+    toc.forEach(t => { if (t.l === 'h2' || !secs.length) secs.push({ head: t.l === 'h2' ? t : null, subs: [] }); if (t.l !== 'h2') secs[secs.length - 1].subs.push(t); });
+    const links = {};
+    const jump = (id, smooth) => {
+      const el = document.getElementById(id); if (!el) return;
+      const top = el.getBoundingClientRect().top + scrollY - (innerWidth <= 900 ? 76 : 20);
+      scrollTo({ top, behavior: smooth && !reduce() ? 'smooth' : 'auto' });
+      history.replaceState(null, '', '#/fiche/' + c.id + '/' + id);
+    };
+    const link = (t, n) => {
+      let [k, title] = splitHead(t.t);
+      if (t.l === 'h2' && /^\d+\.?$/.test(k || '')) k = null; // le numéro est déjà dans la pastille
+      const a = h('a', { href: '#/fiche/' + c.id + '/' + t.id, class: 'toc-a ' + t.l, 'data-id': t.id, onclick(e) { e.preventDefault(); jump(t.id, true); closeDrawer(); } },
+        t.l === 'h2' ? h('span', { class: 'toc-dot', 'aria-hidden': 'true' }, n) : null,
+        h('span', { class: 'toc-t' }, k ? h('small', null, k) : null, title));
+      links[t.id] = a; return a;
+    };
+    const list = h('ol', { class: 'toc-list' }, secs.map((s, i) => h('li', { class: 'toc-sec', 'data-id': s.head ? s.head.id : (s.subs[0] || {}).id },
+      s.head ? link(s.head, i + 1) : null,
+      s.subs.length ? h('ol', { class: 'toc-sub' }, s.subs.map(t => h('li', null, link(t)))) : null)));
+    const pct = h('span', { class: 'toc-pct' }, minutes(readMin));
+    const closeBtn = h('button', { class: 'icon-btn toc-close', type: 'button', 'aria-label': 'Fermer le sommaire', onclick: () => closeDrawer() }, icon('x', 18));
+    const side = h('nav', { class: 'toc', id: 'toc', 'aria-label': 'Sommaire du chapitre' },
+      h('div', { class: 'toc-head' }, h('div', null, h('b', null, 'Sommaire'), pct), closeBtn),
+      list,
+      h('div', { class: 'toc-foot' },
+        h('a', { href: '#/chapitre/' + c.id, class: 'toc-mini' }, icon('left', 14), 'Chapitre ' + c.n),
+        next ? h('a', { href: '#/fiche/' + next.id, class: 'toc-mini' }, 'Fiche suivante', icon('right', 14)) : null));
+    // Bouton flottant (petit écran) : montre la section en cours et ouvre le tiroir
+    const fabLabel = h('span', { class: 'toc-fab-t' }, 'Sommaire');
+    const fab = h('button', { class: 'toc-fab show', type: 'button', 'aria-controls': 'toc', 'aria-expanded': 'false', onclick: () => openDrawer() }, icon('list', 18), fabLabel);
+    const scrim = h('div', { class: 'toc-scrim', onclick: () => closeDrawer() });
+    let lastFocus = null;
+    function openDrawer() { lastFocus = document.activeElement; side.classList.add('open'); scrim.classList.add('show'); fab.setAttribute('aria-expanded', 'true'); const a = side.querySelector('.toc-a.cur') || side.querySelector('.toc-a'); a && a.focus({ preventScroll: true }); }
+    function closeDrawer() { if (!side.classList.contains('open')) return; side.classList.remove('open'); scrim.classList.remove('show'); fab.setAttribute('aria-expanded', 'false'); lastFocus && lastFocus.focus && lastFocus.focus({ preventScroll: true }); }
+    ST.onKey(e => {
+      if (e.key === 'Escape') closeDrawer();
+      else if (e.key.toLowerCase() === 's' && innerWidth <= 1100) { e.preventDefault(); side.classList.contains('open') ? closeDrawer() : openDrawer(); }
+    });
+
     const prog = h('div', { class: 'read-prog' }, h('div'));
     box.replaceChildren(prog, h('div', { class: 'wrap fiche-wrap', style: { '--c': c.col } },
-      h('header', { class: 'fiche-head' }, h('a', { class: 'back', href: '#/chapitre/' + c.id }, icon('left', 16), 'Chapitre ' + c.n), h('p', { class: 'part' }, c.part), h('h1', null, c.title)),
-      h('div', { class: 'fiche-grid' }, body, side),
+      h('header', { class: 'fiche-head' }, h('a', { class: 'back', href: '#/chapitre/' + c.id }, icon('left', 16), 'Chapitre ' + c.n), h('p', { class: 'part' }, c.part), h('h1', null, c.title),
+        h('p', { class: 'fiche-meta' }, h('span', null, icon('clock', 15), minutes(readMin) + ' de lecture'), h('span', null, icon('list', 15), secs.length + (secs.length > 1 ? ' parties' : ' partie')), S().read[c.id] ? h('span', { class: 'ok' }, icon('check', 15), 'Déjà relue') : null)),
+      h('div', { class: 'fiche-grid' }, side, body),
       h('footer', { class: 'fiche-foot' }, readBtn,
         h('div', { class: 'row-actions' }, h('a', { class: 'btn', href: '#/cartes', onclick() { only(c.id); } }, icon('cards', 16), 'Flashcards du chapitre'), h('a', { class: 'btn', href: '#/quiz', onclick() { only(c.id); } }, icon('quiz', 16), 'Quiz du chapitre')),
         h('div', { class: 'pager' }, prev ? h('a', { href: '#/fiche/' + prev.id }, icon('left', 16), 'Ch. ' + prev.n + ' · ' + prev.short) : h('span'), next ? h('a', { href: '#/fiche/' + next.id }, 'Ch. ' + next.n + ' · ' + next.short, icon('right', 16)) : null))));
+    document.body.append(scrim, fab);
+    const unreveal = UI.reveal(body, ':scope > *');
+
     // Reprendre la lecture là où elle s'était arrêtée + bouton « haut de page »
     const posKey = 'cloclo.pos.' + c.id;
     let saved = 0; try { saved = +localStorage.getItem(posKey) || 0; } catch (e) { }
-    const topBtn = h('button', { class: 'to-top', type: 'button', 'aria-label': 'Revenir en haut de la fiche', title: 'Haut de page', onclick() { scrollTo({ top: 0, behavior: 'smooth' }); } }, icon('left', 18));
-    const resume = saved > 600 ? h('button', { class: 'resume', type: 'button', onclick() { scrollTo({ top: saved, behavior: 'smooth' }); resume.remove(); } }, icon('book', 16), 'Reprendre la lecture', h('span', { class: 'resume-x', role: 'button', 'aria-label': 'Ignorer', onclick(e) { e.stopPropagation(); resume.remove(); } }, icon('x', 14))) : null;
+    const topBtn = h('button', { class: 'to-top', type: 'button', 'aria-label': 'Revenir en haut de la fiche', title: 'Haut de page', onclick() { scrollTo({ top: 0, behavior: reduce() ? 'auto' : 'smooth' }); history.replaceState(null, '', '#/fiche/' + c.id); } }, icon('left', 18));
+    const resume = !args[1] && saved > 600 ? h('button', { class: 'resume', type: 'button', onclick() { scrollTo({ top: saved, behavior: 'smooth' }); resume.remove(); } }, icon('book', 16), 'Reprendre la lecture', h('span', { class: 'resume-x', role: 'button', 'aria-label': 'Ignorer', onclick(e) { e.stopPropagation(); resume.remove(); } }, icon('x', 14))) : null;
     document.body.append(topBtn); if (resume) { document.body.append(resume); setTimeout(() => resume.isConnected && resume.remove(), 9000); }
-    let saveT = 0;
-    function onScroll() {
-      const d = document.documentElement, p = d.scrollTop / Math.max(1, d.scrollHeight - d.clientHeight);
-      prog.firstChild.style.width = (p * 100) + '%';
+    if (args[1]) requestAnimationFrame(() => jump(args[1], false)); // lien direct vers une section : #/fiche/<chapitre>/<section>
+
+    let saveT = 0, raf = 0, curId = null;
+    function paint() {
+      raf = 0;
+      const d = document.documentElement, p = Math.min(1, d.scrollTop / Math.max(1, d.scrollHeight - d.clientHeight));
+      prog.firstChild.style.transform = 'scaleX(' + p + ')';
       topBtn.classList.toggle('show', d.scrollTop > 900);
       if (resume && d.scrollTop > 300) resume.remove();
       if (d.scrollTop > 300) { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(posKey, p > .97 ? 0 : Math.round(d.scrollTop)); } catch (e) { } }, 400); }
-      let cur = null; toc.forEach(t => { const el = document.getElementById(t.id); if (el && el.getBoundingClientRect().top < 140) cur = t.id; });
-      side.querySelectorAll('a').forEach(a => a.classList.toggle('cur', a.dataset.id === cur));
+      let cur = null;
+      for (const t of toc) { const el = document.getElementById(t.id); if (el && el.getBoundingClientRect().top < 160) cur = t.id; else if (el) break; }
+      const left = Math.round(readMin * (1 - p));
+      pct.textContent = p > .985 ? 'Terminé' : p < .02 ? minutes(readMin) : Math.round(p * 100) + ' % · ' + (left ? left + ' min restantes' : 'presque fini');
+      side.style.setProperty('--p', p);
+      if (cur === curId) return; curId = cur;
+      const curSec = cur && links[cur].closest('.toc-sec');
+      let passed = true;
+      list.querySelectorAll('.toc-sec').forEach(li => { const on = li === curSec; if (on) passed = false; li.classList.toggle('open', on); li.classList.toggle('done', passed && !!curSec); });
+      Object.values(links).forEach(a => { a.classList.toggle('cur', a.dataset.id === cur); a.toggleAttribute('aria-current', a.dataset.id === cur); });
+      const curA = cur && links[cur];
+      fabLabel.textContent = curA ? splitHead(toc.find(t => t.id === cur).t)[1] : 'Sommaire';
+      // garde le titre actif visible dans le sommaire, sans faire défiler la page
+      if (curA && !side.classList.contains('open') && side.scrollHeight > side.clientHeight) {
+        const r = curA.getBoundingClientRect(), s = side.getBoundingClientRect();
+        if (r.top < s.top + 60 || r.bottom > s.bottom - 60) side.scrollTo({ top: side.scrollTop + r.top - s.top - s.height / 3, behavior: 'smooth' });
+      }
     }
-    addEventListener('scroll', onScroll, { passive: true }); onScroll();
-    return () => { removeEventListener('scroll', onScroll); clearTimeout(saveT); topBtn.remove(); resume && resume.remove(); };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(paint); };
+    addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll); paint();
+    return () => { removeEventListener('scroll', onScroll); removeEventListener('resize', onScroll); cancelAnimationFrame(raf); clearTimeout(saveT); unreveal(); [topBtn, fab, scrim].forEach(x => x.remove()); resume && resume.remove(); };
   }
 
   /* ================= COURS (hub) ================= */

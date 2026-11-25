@@ -7,6 +7,9 @@ Site statique (HTML/CSS/JS, aucune installation) : fiches, flashcards à répét
 2. Settings → Pages → *Deploy from a branch* → `main` / `/ (root)` → Save.
 3. Le site est disponible à `https://<pseudo>.github.io/<depot>/` après ~1 minute.
 
+## Fiches de cours
+Chaque fiche a un **sommaire à gauche** : tous les titres (sections, paragraphes, sous-parties de la section en cours), la progression de lecture et le temps restant. Un clic mène au titre, et l'adresse de la page pointe vers lui (`#/fiche/c1/<titre>`), donc on peut la garder en favori. Sur petit écran, le bouton **Sommaire** en bas (ou la touche `S`) ouvre le sommaire en tiroir.
+
 ## Matières
 Un sélecteur (en haut du menu) permet de passer d'une matière à l'autre. Chaque matière a sa propre progression (XP, séries, badges).
 - **Droit des biens** : `js/data/c1.js` … `c5.js`, schémas dans `js/data/trees.js`.

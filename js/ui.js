@@ -89,7 +89,7 @@
     const r = size / 2 - 5, c = 2 * Math.PI * r;
     const el = svg('svg', { viewBox: `0 0 ${size} ${size}`, width: size, height: size, class: 'ring', role: 'img', 'aria-label': Math.round(p * 100) + ' %' });
     el.append(svg('circle', { cx: size / 2, cy: size / 2, r, fill: 'none', 'stroke-width': 5, class: 'ring-bg' }));
-    el.append(svg('circle', { cx: size / 2, cy: size / 2, r, fill: 'none', 'stroke-width': 5, 'stroke-linecap': 'round', stroke: col, 'stroke-dasharray': c, 'stroke-dashoffset': c * (1 - p), transform: `rotate(-90 ${size / 2} ${size / 2})` }));
+    el.append(svg('circle', { cx: size / 2, cy: size / 2, r, fill: 'none', 'stroke-width': 5, 'stroke-linecap': 'round', stroke: col, 'stroke-dasharray': c, 'stroke-dashoffset': c * (1 - p), class: 'ring-v', style: '--len:' + c, transform: `rotate(-90 ${size / 2} ${size / 2})` }));
     el.append(svg('text', { x: size / 2, y: size / 2 + 4, 'text-anchor': 'middle', class: 'ring-t' }, label != null ? label : Math.round(p * 100)));
     return el;
   }
@@ -271,5 +271,31 @@
   let lastW = innerWidth; // sur mobile, la barre d'adresse change la hauteur : on ne ferme que si la largeur change
   addEventListener('resize', () => { if (innerWidth !== lastW) { lastW = innerWidth; hideTip(); } });
 
-  window.UI = { svg, icon, toast, confetti, stamp, ring, parcelMap, chapterPicker, modal, sessionBar };
+
+  /* ---------- Animations ---------- */
+  const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Fait apparaître en douceur les blocs quand ils entrent dans l'écran. Ceux déjà visibles ne bougent pas.
+  function reveal(root, sel) {
+    if (calm() || !('IntersectionObserver' in window)) return () => { };
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+    requestAnimationFrame(() => root.querySelectorAll(sel).forEach(el => {
+      if (el.getBoundingClientRect().top < innerHeight * .92) return;
+      el.classList.add('rv'); io.observe(el);
+    }));
+    return () => io.disconnect();
+  }
+  // Après chaque changement de page : listes qui arrivent en cascade, chiffres qui défilent
+  const STAGGER = '.tiles, .chap-list, .list-stack, .grid.cases, .quick-stats, .juris-list, .bp-title, .cards-choice';
+  function animatePage(root) {
+    root.querySelectorAll(STAGGER).forEach(list => [...list.children].forEach((el, i) => el.style.setProperty('--i', Math.min(i, 14))));
+    if (calm()) return;
+    root.querySelectorAll('.quick-stats dd').forEach(dd => {
+      const m = dd.textContent.match(/^(\d+)(.*)$/s); if (!m || +m[1] < 2) return;
+      const end = +m[1], rest = m[2], t0 = performance.now(), dur = Math.min(1100, 500 + end * 8);
+      const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); dd.textContent = Math.round(end * e) + rest; if (k < 1 && dd.isConnected) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+  }
+
+  window.UI = { reveal, animatePage, svg, icon, toast, confetti, stamp, ring, parcelMap, chapterPicker, modal, sessionBar };
 })();
