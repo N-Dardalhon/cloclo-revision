@@ -55,6 +55,7 @@
   const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
   const dayKey = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   const chap = id => DATA.chapters.find(c => c.id === id);
+  DATA.allTrees = DATA.trees.slice(); // tous les schémas (le prof s'en sert pour les cas pratiques)
   DATA.trees = DATA.trees.filter(t => chap(t.ch)); // schémas de la matière choisie
 
   /* ---------- Stockage ---------- */

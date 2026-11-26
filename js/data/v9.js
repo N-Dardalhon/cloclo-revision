@@ -5,9 +5,9 @@ fiche: [
 ['plan', [
   ['Un paysage complexe', ['Obligations accessoires et découvertes par le juge', 'Tentatives de simplification']],
   ['Section 1 — L\'obligation de délivrance', ['§1 L\'objet : la chose, ses accessoires, l\'information ; la conformité', '§2 Les modalités', '§3 Les sanctions']],
-  ['Section 2 — L\'obligation de garantie', ['§1 La garantie d\'éviction : fait personnel, fait d\'un tiers (conditions, effets)']]
+  ['Section 2 — L\'obligation de garantie', ['§1 La garantie d\'éviction : fait personnel, fait d\'un tiers (conditions, effets)', '§2 Les vices cachés : chapitre 10', '§3 La garantie de conformité, puis Section 3, l\'obligation de sécurité : chapitre 11']]
 ]],
-['note', `Tes notes s'arrêtent aux **effets de la garantie d'éviction du fait d'un tiers** (garantie incidente). La **garantie des vices cachés** n'y est abordée qu'en comparaison avec la non-conformité : la fiche couvre exactement ce que tu as.`],
+['note', `La suite des obligations du vendeur est dans les chapitres suivants : **vices cachés** (ch. 10), **garantie de conformité et obligation de sécurité** (ch. 11). Les **obligations de l'acheteur** ferment le cours (ch. 12).`],
 
 ['h2', 'Un paysage complexe'],
 ['ul', [
@@ -121,7 +121,17 @@ fiche: [
   ['Éviction ou vice caché ?', `Trouble lié à un **droit revendiqué par un tiers** : éviction. Trouble lié à un **défaut intrinsèque** de la chose : vice caché.`]
 ]],
 ['p', `La garantie du fait d'un tiers **n'est pas d'ordre public** : on peut stipuler une **clause de non-garantie** (art. 1627). Limites : si le vendeur **connaissait** le risque et ne l'a pas dit, la clause ne joue pas ; et même valable, elle n'empêche pas la **restitution du prix** (art. 1629), elle limite seulement les autres indemnités, **sauf** si l'acheteur a acheté **à ses risques et périls**.`],
-['p', `**Effets** : règles spéciales (**art. 1630** et s.) et, par renvoi (**art. 1639**), règles communes (remise en cause du contrat, restitutions, dommages-intérêts). L'acheteur assigné par le tiers peut appeler le vendeur **en garantie incidente** : le vendeur devient partie au litige et peut se défendre ; le résultat diffère selon que l'éviction est **totale** ou **partielle**.`]
+['p', `**Effets** : règles spéciales (**art. 1630** et s.) et, par renvoi (**art. 1639**), règles communes (remise en cause du contrat, restitutions, dommages-intérêts). L'acheteur peut agir de **deux manières**.`],
+['steps', [
+  ['Garantie incidente', `L'acquéreur est **assigné par le tiers** ; pendant ce procès, il **appelle le vendeur en garantie**. Le vendeur devient **partie au litige** et peut se défendre.`],
+  ['Garantie principale', `Le tiers a **déjà gagné** (éviction prononcée) ; **ensuite seulement**, l'acquéreur se retourne contre le vendeur. Même régime, mais le vendeur n'a pas pu se défendre : **art. 1640**.`]
+]],
+['art', 'Art. 1640', `« La garantie pour cause d'éviction cesse lorsque l'acquéreur s'est laissé condamner par un jugement en dernier ressort, ou dont l'appel n'est plus recevable, sans appeler son vendeur, si celui-ci prouve qu'il existait des moyens suffisants pour faire rejeter la demande. »`],
+['pair', [
+  ['Éviction totale', `Le vendeur **restitue le prix**, même s'il y a une clause de non-garantie (**art. 1629**) et même si le bien a **perdu de la valeur** (**art. 1631**) : dérogation au droit commun, favorable à l'acheteur. En plus : **dommages-intérêts** s'il y a préjudice ; la **plus-value** prise par le bien (**art. 1633**) ; les **réparations et améliorations utiles** (**art. 1634**) ; les dépenses **voluptuaires** seulement si le vendeur était de **mauvaise foi** (**art. 1635**).`],
+  ['Éviction partielle', `Si l'acheteur n'aurait pas acheté sans la partie perdue : il peut demander la **résolution** (l'**art. 1636** dit « résilier », à tort). Sinon, ou s'il préfère : remboursement de la **valeur de la partie évincée au jour de l'éviction**, et non une part proportionnelle du prix (**art. 1637**). Ici, c'est donc l'acheteur qui supporte la **moins-value**.`]
+]],
+['tip', `L'écart entre éviction totale et partielle (qui supporte la moins-value ?) est critiqué : le **projet Capitant** aligne les deux régimes pour que l'acheteur ne supporte **jamais** la moins-value (art. 1223 du projet).`]
 ],
 
 cards: [
@@ -157,7 +167,13 @@ cards: [
  [`Conditions de la garantie d'éviction du fait d'un tiers ?`, `Trouble **de droit**, cause **antérieure** à la vente, acheteur de **bonne foi**.`],
  [`Servitude contestée par le voisin / servitude inexistante ?`, `**Contestée** : éviction. **Inexistante dès l'origine** : **non-conformité**.`],
  [`Effet d'une clause de non-garantie du fait d'un tiers ?`, `Inefficace si le vendeur **connaissait** le risque ; sinon, le vendeur doit quand même **restituer le prix** (art. 1629), sauf achat **à ses risques et périls**.`],
- [`Qu'est-ce que la garantie incidente ?`, `L'acheteur assigné par le tiers **appelle le vendeur** en garantie dans l'instance ; le vendeur devient partie au litige.`]
+ [`Qu'est-ce que la garantie incidente ?`, `L'acheteur assigné par le tiers **appelle le vendeur** en garantie dans l'instance ; le vendeur devient partie au litige.`],
+ [`Qu'est-ce que la garantie principale ?`, `L'acheteur, **déjà évincé** par jugement, agit **ensuite** contre son vendeur.`],
+ [`Que prévoit l'art. 1640 ?`, `La garantie cesse si l'acheteur s'est laissé condamner sans **appeler son vendeur**, quand celui-ci prouve qu'il avait des **moyens suffisants** pour faire rejeter la demande.`, `Art. 1640`],
+ [`Éviction totale : le bien a perdu de la valeur. Que restitue le vendeur ?`, `**Tout le prix** (art. 1631), même avec une clause de non-garantie (art. 1629).`, `Art. 1631`],
+ [`Éviction totale : le bien a pris de la valeur. Que doit le vendeur ?`, `En plus du prix, ce que la chose vaut **au-dessus du prix** de vente (art. 1633).`, `Art. 1633`],
+ [`Quelles dépenses de l'acheteur évincé le vendeur rembourse-t-il ?`, `Les dépenses **utiles** (art. 1634) ; les dépenses **voluptuaires** seulement s'il était de **mauvaise foi** (art. 1635).`],
+ [`Éviction partielle : quelles options ?`, `**Résolution** si l'acheteur n'aurait pas acheté sans la partie perdue (art. 1636) ; sinon remboursement de la **valeur de la partie évincée au jour de l'éviction** (art. 1637).`]
 ],
 
 qcm: [
@@ -176,7 +192,10 @@ qcm: [
  [`Le cédant d'un fonds de commerce rouvre une boutique identique en face, sans clause de non-concurrence. Le cessionnaire peut invoquer…`, `la garantie d'éviction du fait personnel (trouble de fait)`, [`rien, faute de clause`, `la garantie des vices cachés`, `la garantie d'éviction du fait d'un tiers`], ``],
  [`Une clause excluant la garantie d'éviction du fait personnel est…`, `nulle`, [`valable entre professionnels`, `valable si écrite`, `valable si l'acheteur est informé`], `Ordre public.`],
  [`La garantie d'éviction du fait d'un tiers ne joue que pour…`, `les troubles de droit`, [`les troubles de fait`, `les troubles de fait et de droit`, `les vices cachés`], ``],
- [`Malgré une clause de non-garantie valable, en cas d'éviction par un tiers, le vendeur doit…`, `restituer le prix, sauf achat à ses risques et périls`, [`rien du tout`, `des dommages-intérêts intégraux`, `livrer un autre bien`], ``, `Art. 1629`]
+ [`Malgré une clause de non-garantie valable, en cas d'éviction par un tiers, le vendeur doit…`, `restituer le prix, sauf achat à ses risques et périls`, [`rien du tout`, `des dommages-intérêts intégraux`, `livrer un autre bien`], ``, `Art. 1629`],
+ [`Éviction totale d'un bien qui a perdu la moitié de sa valeur depuis la vente. Le vendeur restitue…`, `l'intégralité du prix`, [`la moitié du prix`, `la valeur actuelle du bien`, `rien, faute de faute`], `Art. 1631 : dérogation au droit commun, favorable à l'acheteur.`, `Art. 1631`],
+ [`Éviction partielle sans résolution : l'acheteur obtient…`, `la valeur de la partie évincée au jour de l'éviction`, [`une part proportionnelle du prix`, `le prix total`, `des dommages-intérêts forfaitaires`], ``, `Art. 1637`],
+ [`L'acheteur se laisse condamner sans appeler son vendeur, qui avait de quoi gagner. La garantie…`, `cesse (art. 1640)`, [`joue normalement`, `est doublée`, `se transforme en garantie des vices cachés`], ``, `Art. 1640`]
 ],
 
 vf: [
@@ -192,7 +211,9 @@ vf: [
  [`L'exception de garantie de l'acheteur contre le vendeur est perpétuelle.`, true, `Voie d'exception imprescriptible.`],
  [`L'interdiction de concurrence fondée sur la garantie d'éviction peut être perpétuelle.`, false, `Contrôle de proportionnalité : délai raisonnable.`],
  [`Réserver une servitude de passage au vendeur viole la garantie d'éviction.`, false, `Cela limite l'objet de la vente, pas la garantie.`],
- [`L'acheteur qui connaissait le risque d'éviction peut invoquer la garantie.`, false, `L'absence d'aléa chasse la garantie : il doit être de bonne foi.`]
+ [`L'acheteur qui connaissait le risque d'éviction peut invoquer la garantie.`, false, `L'absence d'aléa chasse la garantie : il doit être de bonne foi.`],
+ [`En cas d'éviction totale, le vendeur rembourse les dépenses voluptuaires de l'acheteur dans tous les cas.`, false, `Seulement s'il était de mauvaise foi (art. 1635) ; les dépenses utiles, elles, sont toujours remboursées (art. 1634).`],
+ [`L'art. 1636 permet une vraie résiliation de la vente en cas d'éviction partielle.`, false, `Le texte dit « résilier », mais c'est une résolution.`]
 ],
 
 arts: [
@@ -250,6 +271,7 @@ nums: [
  [`2 ans`, `Délai pour agir en garantie des vices cachés (à compter de la découverte)`, `Art. 1648`],
  [`1/20`, `Écart de contenance en deçà duquel il n'y a ni supplément ni diminution du prix (immeuble)`, `Art. 1619`],
  [`1989`, `Début de la conception moniste de la conformité (1re civ., Com.)`],
- [`2019`, `Directive (20 mai) sur la garantie de conformité, remplaçant celle de 1999`]
+ [`2019`, `Directive (20 mai) sur la garantie de conformité, remplaçant celle de 1999`],
+ [`Art. 1630 à 1640`, `Effets de la garantie d'éviction (totale, partielle, incidente, principale)`]
 ]
 });

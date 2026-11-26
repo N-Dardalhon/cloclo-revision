@@ -5,7 +5,7 @@ sujets: [
 
 /* ---------------------------------------------------------------- DISSERTATIONS */
 {
-  id: 'v-vices', type: 'diss', niveau: 'hors', theme: 'Vices cachés', duree: '3 h',
+  id: 'v-vices', type: 'diss', niveau: 'cours', theme: 'Vices cachés', duree: '3 h',
   sujet: `La garantie des vices cachés`,
   kit: [
     `**Art. 1641** : le vendeur est tenu de la garantie à raison des **défauts cachés** de la chose vendue qui la rendent **impropre à l'usage** auquel on la destine, ou qui diminuent tellement cet usage que l'acheteur ne l'aurait pas acquise, ou en aurait donné un moindre prix, s'il les avait connus.`,
@@ -17,7 +17,7 @@ sujets: [
     `**Frontières** : **non-conformité** (chose différente de celle convenue : obligation de délivrance, art. 1604) ≠ **vice** (chose conforme mais défectueuse pour son usage). Civ. 1re, 5 mai 1993 : le défaut qui rend la chose impropre à l'usage est un vice caché, pas un défaut de conformité. **Erreur** : l'action pour vice caché est l'**unique fondement** possible (Civ. 1re, 14 mai 1996), mais le **dol** reste ouvert.`
   ],
   lecture: [
-    { q: `Ton cours s'arrête à la garantie d'éviction. Que fais-tu du chapitre sur l'éviction ?`, opts: [
+    { q: `Ton cours traite l'éviction juste avant les vices cachés. Que fais-tu du chapitre sur l'éviction ?`, opts: [
       `Je l'évoque en introduction pour situer la garantie des vices parmi les obligations du vendeur (art. 1603, 1625), puis je n'en parle plus`,
       `J'en fais ma partie I, puisque c'est aussi une garantie`,
       `Je fais un plan « I. Éviction, II. Vices cachés »`,
@@ -65,7 +65,7 @@ sujets: [
 },
 
 {
-  id: 'v-acheteur', type: 'diss', niveau: 'hors', theme: 'Obligations de l\'acheteur', duree: '3 h',
+  id: 'v-acheteur', type: 'diss', niveau: 'cours', theme: 'Obligations de l\'acheteur', duree: '3 h',
   sujet: `Les obligations de l'acheteur`,
   kit: [
     `**Art. 1650** : « La principale obligation de l'acheteur est de **payer le prix** au jour et au lieu réglés par la vente. » À défaut de stipulation : au lieu et au temps de la **délivrance** (art. 1651).`,
@@ -123,7 +123,7 @@ sujets: [
 },
 
 {
-  id: 'v-conso', type: 'diss', niveau: 'hors', theme: 'Droit de la consommation', duree: '3 h',
+  id: 'v-conso', type: 'diss', niveau: 'frontiere', theme: 'Droit de la consommation', duree: '3 h',
   sujet: `L'acheteur consommateur`,
   kit: [
     `**Consommateur** (art. liminaire C. consom.) : personne physique qui agit à des fins qui n'entrent pas dans le cadre de son activité commerciale, industrielle, artisanale, libérale ou agricole. Face à lui : le **professionnel**.`,
@@ -358,7 +358,7 @@ sujets: [
 },
 
 {
-  id: 'v-art1641', type: 'comm', niveau: 'hors', theme: 'Vices cachés', duree: '3 h',
+  id: 'v-art1641', type: 'comm', niveau: 'cours', theme: 'Vices cachés', duree: '3 h',
   sujet: `Commentez l'article 1641 du Code civil.`,
   doc: `**Article 1641 du Code civil** : « Le vendeur est tenu de la garantie à raison des défauts cachés de la chose vendue qui la rendent impropre à l'usage auquel on la destine, ou qui diminuent tellement cet usage que l'acheteur ne l'aurait pas acquise, ou n'en aurait donné qu'un moindre prix, s'il les avait connus. »`,
   kit: [
@@ -402,7 +402,7 @@ sujets: [
 
 /* ---------------------------------------------------------------- CAS PRATIQUES */
 {
-  id: 'v-cas-voiture', type: 'cas', niveau: 'hors', theme: 'Vices cachés, conformité', duree: '1 h 30',
+  id: 'v-cas-voiture', type: 'cas', niveau: 'cours', theme: 'Vices cachés, conformité', duree: '1 h 30',
   sujet: `Cas pratique : la voiture de Clara`,
   doc: `Le 3 mars 2026, Clara, étudiante, achète une voiture d'occasion de 2019 au garage **Auto Plus** pour 9 000 €. Le bon de commande précise : « **véhicule vendu en l'état, sans garantie** ».\n\nLe 20 mai 2026, le moteur casse. L'expert qu'elle mandate conclut que le **joint de culasse était défectueux avant la vente**, ce qui n'était pas décelable par un non-spécialiste.\n\nLe garage refuse toute prise en charge en invoquant la clause. Clara voudrait savoir sur quel fondement agir, ce qu'elle peut obtenir et dans quel délai.`,
   kit: [
@@ -510,7 +510,7 @@ sujets: [
 },
 
 {
-  id: 'v-cas-chaine', type: 'cas', niveau: 'hors', theme: 'Chaînes de contrats', duree: '1 h 30',
+  id: 'v-cas-chaine', type: 'cas', niveau: 'cours', theme: 'Chaînes de contrats', duree: '1 h 30',
   sujet: `Cas pratique : le camping-car de M. Diallo`,
   doc: `M. Diallo a acheté un camping-car neuf auprès du concessionnaire **Évasion**, qui l'avait lui-même acheté au fabricant **Roulier**. Six mois plus tard, un défaut de fabrication du châssis, indécelable à l'achat, rend le véhicule dangereux et inutilisable.\n\nÉvasion vient d'être placé en **liquidation judiciaire**. M. Diallo voudrait agir directement contre Roulier, avec qui il n'a signé aucun contrat. Roulier répond qu'il n'a « aucun lien » avec lui et, subsidiairement, invoque une **clause limitative** de garantie stipulée dans son contrat avec Évasion.`,
   kit: [
@@ -558,6 +558,94 @@ sujets: [
 },
 
 /* ---------------------------------------------------------------- QUESTIONS */
+{
+  id: 'v-q-actiondirecte', type: 'q', niveau: 'cours', theme: 'Chaînes de contrats', duree: '30 min',
+  sujet: `L'action directe du sous-acquéreur.`,
+  kit: [
+    `**Hypothèse** : A vend à B, qui revend à C ; le vice apparaît chez C. Trois voies : **action récursoire** (C contre B, puis B contre A), **appel en garantie** (B appelle A dans l'instance), **action directe** (C contre A, en une seule action).`,
+    `**Nature** : admise depuis **1820**, elle est **contractuelle** : C exerce l'action née du **premier contrat**, si le vice existait dès la première vente.`,
+    `**Domaine** : chaînes **translatives** (ventes successives), puis **acquisitives** (chose incorporée ou construite) ; refusée dans les chaînes **non translatives** (**Ass. plén., 12 juill. 1991, Besse**).`,
+    `**Fondement** : ni la stipulation pour autrui ni la cession de créance (artificielles) ; l'action est l'**accessoire de la chose** et la suit (**propter rem**).`,
+    `**Régime** : les clauses du **premier contrat** sont opposables au sous-acquéreur, pas celles du dernier. Garantie de conformité : **art. L217-29 C. conso.** **CJUE** : matière **extracontractuelle** pour la compétence.`
+  ],
+  lecture: [
+    { q: `Quelle est l'erreur à ne pas commettre ?`, opts: [
+      `Dire que l'action directe est délictuelle en droit interne`,
+      `Citer l'arrêt Besse`,
+      `Parler du fondement propter rem`,
+      `Distinguer chaînes translatives et non translatives`],
+      ans: 0, exp: `En droit interne, l'action directe est **contractuelle** ; seule la CJUE la classe en matière extracontractuelle, et seulement pour la **compétence**.` }
+  ],
+  defs: [`**Action directe**`, `**Chaîne translative / acquisitive**`, `**Propter rem**`],
+  problematique: `Comment le sous-acquéreur peut-il agir contre un vendeur avec qui il n'a pas contracté, et jusqu'où ?`,
+  plan: [
+    ['Réponse structurée', [
+      `1. Hypothèse et intérêt : éviter les actions en cascade (récursoire, appel en garantie)`,
+      `2. Nature contractuelle et fondement propter rem ; domaine : translatives, acquisitives, limite Besse (1991)`,
+      `3. Régime : clauses du premier contrat opposables ; garantie de conformité (L217-29) ; position de la CJUE`]]
+  ],
+  hs: [`Un exposé général sur l'effet relatif des contrats.`],
+  points: [`J'ai posé l'hypothèse A → B → C`, `J'ai dit que l'action est contractuelle`, `J'ai cité Besse (1991)`, `J'ai expliqué le fondement propter rem`, `J'ai parlé des clauses du premier contrat`]
+},
+
+{
+  id: 'v-q-securite', type: 'q', niveau: 'cours', theme: 'Obligation de sécurité', duree: '30 min',
+  sujet: `Distinguez la garantie des vices cachés et l'obligation de sécurité.`,
+  kit: [
+    `**Critère** : la garantie des vices cachés répare le dommage causé **à la chose** ; l'obligation de sécurité (aujourd'hui la responsabilité du fait des **produits défectueux**, art. 1245 et s.) répare le dommage causé **par la chose** à une personne ou à d'autres biens.`,
+    `**Histoire** : d'abord logée dans les vices cachés (art. 1646, « frais occasionnés par la vente », lecture artificielle ; bref délai), l'obligation de sécurité s'en détache en **1984** et **1991**, puis se décontractualise (**1re civ., 17 janv. 1995, Planet Wattohm**).`,
+    `**Nature** : la garantie joue **sans faute**, même en cas de force majeure ; l'obligation de sécurité est une **obligation de résultat**, dont la **cause étrangère** exonère.`,
+    `**Bénéficiaires** : la garantie profite à l'**acheteur** (et aux sous-acquéreurs par l'action directe) ; l'obligation de sécurité aussi aux **tiers**.`
+  ],
+  lecture: [
+    { q: `Le téléphone qui prend feu : quel réflexe ?`, opts: [
+      `Séparer le dommage au téléphone (vices cachés) et le dommage corporel (produits défectueux)`,
+      `Tout traiter en vices cachés`,
+      `Tout traiter en non-conformité`,
+      `Tout traiter en garantie d'éviction`],
+      ans: 0, exp: `Chaque régime a son **domaine propre** : à la chose / par la chose.` }
+  ],
+  defs: [`**Vice caché** (art. 1641)`, `**Obligation de sécurité**`],
+  problematique: `Deux protections longtemps confondues, aujourd'hui séparées par l'objet du dommage.`,
+  plan: [
+    ['Réponse structurée', [
+      `1. Le critère : dommage à la chose / dommage causé par la chose`,
+      `2. L'histoire : de la confusion (art. 1646) au détachement (1984, 1991) et à la décontractualisation (Planet Wattohm)`,
+      `3. Les régimes : garantie sans faute / obligation de résultat ; acheteur / tiers ; 2 ans / produits défectueux`]]
+  ],
+  hs: [`Un exposé sur la seule responsabilité du fait des produits défectueux.`],
+  points: [`J'ai donné le critère à / par la chose`, `J'ai cité 1984 et Planet Wattohm`, `J'ai opposé garantie et obligation de résultat`, `J'ai parlé des tiers`]
+},
+
+{
+  id: 'v-q-retirement', type: 'q', niveau: 'cours', theme: 'Obligations de l\'acheteur', duree: '30 min',
+  sujet: `Qu'est-ce que le retirement ?`,
+  kit: [
+    `**Définition** : l'obligation de l'acheteur de **prendre possession matérielle** de la chose ; il transfère la **détention**, pas la propriété (effet automatique de la vente).`,
+    `**Délivrance / retirement** : le vendeur **met à disposition**, l'acheteur **prend** (les frais de transport sont pour lui).`,
+    `**Réception** : au moment du retirement ; acte juridique qui **exécute** la délivrance et **purge les vices apparents** (refus ou réserves possibles).`,
+    `**Sanctions** : mise en demeure → **res perit debitori** ; exécution forcée ou résolution (unilatérale depuis **Tocqueville**) ; **art. 1657** : résolution **de plein droit et sans sommation** pour les **denrées et effets mobiliers**.`
+  ],
+  lecture: [
+    { q: `Le piège de ce sujet ?`, opts: [
+      `Confondre retirement et délivrance, ou retirement et transfert de propriété`,
+      `Citer l'art. 1657`,
+      `Parler de la réception`,
+      `Parler des risques`],
+      ans: 0, exp: `Le retirement est l'**envers** de la délivrance et ne transfère que la **détention**.` }
+  ],
+  defs: [`**Retirement**`, `**Délivrance** (art. 1604)`, `**Réception**`],
+  problematique: `Une obligation discrète de l'acheteur, mais aux effets importants : risques, vices apparents, résolution.`,
+  plan: [
+    ['Réponse structurée', [
+      `1. Définition et distinction avec la délivrance et le transfert de propriété`,
+      `2. Effets : réception, purge des vices apparents, risques après mise en demeure`,
+      `3. Sanctions : droit commun (exécution forcée, résolution) et art. 1657`]]
+  ],
+  hs: [`Traiter le paiement du prix.`],
+  points: [`J'ai défini le retirement`, `Je l'ai distingué de la délivrance`, `J'ai parlé de la réception`, `J'ai cité l'art. 1657`, `J'ai évoqué res perit debitori`]
+},
+
 {
   id: 'v-q-echange', type: 'q', niveau: 'hors', theme: 'Échange', duree: '30 min',
   sujet: `Distinguez la vente et l'échange.`,

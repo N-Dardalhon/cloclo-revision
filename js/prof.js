@@ -158,7 +158,7 @@
     [/n.?(etait|est) pas (a lui|a elle|le sien|la sienne|proprietaire)|appartient (en (fait|realite) )?a (?!lui\b|elle\b)|chose d.?autrui|ne lui appartenait/, 'vente de la chose d autrui'],
     [/(tableau|bijou|montre|voiture|velo|meuble|bague|collier|livre|ordinateur|telephone|objet|statue|vase|piano|cheval).*bonne foi|bonne foi.*(tableau|bijou|montre|voiture|velo|meuble|bague|collier|livre|ordinateur|telephone|objet|statue|vase|piano|cheval)/, 'en fait de meubles la possession vaut titre art. 2276 possesseur de bonne foi meuble corporel'],
     [/depuis (plus de )?(\d+|dix|vingt|trente) ans|pendant (\d+|dix|vingt|trente) ans|occupe .* depuis/, 'usucapion prescription acquisitive possession'],
-    [/trouve|perdu|vole|volee|brocante|occasion/, 'possession vaut titre art. 2276 perte vol revendication'],
+    [/trouve|perdu|vole|volee|brocante/, 'possession vaut titre art. 2276 perte vol revendication'],
     [/panne|ne (fonctionne|marche) (plus|pas)|defaut|vice|fissure|termite|cache/, 'garantie des vices cachés'],
     [/n.?a (jamais )?pas? paye|impaye|ne paie pas|refuse de payer/, 'paiement du prix résolution réserve de propriété'],
     [/promis de (lui )?vendre|promesse|option/, 'promesse unilatérale de vente levée d option'],
@@ -179,6 +179,8 @@
     ['teach', /apprends[- ]moi (un truc|quelque chose|des choses|un (nouveau )?truc)|le savais[- ]tu|surprends[- ]moi|anecdote|truc (a savoir|interessant)|notion du jour|culture/],
     ['greet', /^(bonjour|salut|coucou|hello|hey|yo|bonsoir)\b|qui es[- ]tu|tu es qui/],
     ['thanks', /^(merci|super|top|parfait|genial|trop bien|ok merci)\b/],
+    ['casgive', /(donne|propose|colle|pose|trouve)[- ]moi un (cas|exercice)|un cas pratique (a faire|pour m.?entrainer)|entraine[- ]moi (sur|a|aux) (un |les |des )?cas/],
+    ['casm', /cas pratique|mon cas|ce cas|les faits|aide[- ]moi a (le )?resoudre|resou(s|dre) (ce|mon|le)|que (dois|doit|faut)[- ]?(je|il|elle)? ?(mettre|ecrire|repondre|faire)|quoi (mettre|ecrire|repondre)|que peut[- ](il|elle) faire|quels? (sont )?(ses|les|mes) recours|comment (je )?(le )?(redige|resou)/],
     ['quiz', /interroge|teste[- ]?moi|pose[- ]moi|colle[- ]moi|quiz|fais[- ]moi (reviser|travailler)|une question|entraine/],
     ['revise', /(quoi|que) (reviser|revoir|travailler)|par quoi (je )?commence|mes (lacunes|faiblesses|points faibles)|ou j.?en suis|programme|planning|plan de revision/],
     ['compare', /differen|distingu|compar|\bvs\b|versus|par rapport a|confond|meme chose|pareil/],
@@ -201,7 +203,12 @@
     // des personnages (Paul, Marie…) et une question : c'est un cas pratique
     const people = new Set((q.match(/(?<![.?!]\s|^)\b[A-ZÉ][a-zéèëêïîôç]{2,}\b/g) || []).filter(w => !/^(Code|Cour|Cass|Civ|Art|Monsieur|Madame)$/.test(w)));
     const story = people.size >= 2 && q.length > 60 && /\b(vend|vendu|achete|acquiert|cede|donne|prete|loue|promet|propose|trouve|construit|occupe|possede|appartient|revendique|recuper)/.test(n);
-    if ((long || story) && !hits.includes('quiz')) return { main: 'cas', all: hits };
+    // une petite histoire (plusieurs phrases, des actes juridiques) suivie d'une question : cas pratique
+    const tale = q.length > 80 && (q.match(/[.!?]/g) || []).length >= 2 && /\?/.test(q) && /\b(achete|vend|vendu|livr|pay|signe|loue|promet|promis|cede|commande|decouvre|refuse|tombe|casse|associe|gerant|immatricul|vote|assemblee|occupe|construit|trouve)/.test(n);
+    if (hits.includes('casgive')) return { main: 'casgive', all: hits };
+    if (tale && !hits.includes('quiz')) return { main: 'cas', all: hits };
+    if ((long || story) && (!hits.includes('quiz') || hits.includes('casm'))) return { main: 'cas', all: hits };
+    if (hits.includes('casm')) return { main: 'casmethod', all: hits };
     return { main: hits[0] || 'def', all: hits };
   }
 
@@ -217,8 +224,8 @@
     vente: {
       intro: [`Les contrats spéciaux étudient les contrats **nommés**, que le Code civil règle un par un. Ton cours se concentre sur le premier d'entre eux, la **vente** : « une convention par laquelle l'un s'oblige à livrer une chose, et l'autre à la payer » (art. 1582).`,
         `Elle est **consensuelle** : parfaite dès l'accord sur la chose et le prix (art. 1583), et la propriété passe à l'acheteur au même moment (**solo consensu**).`,
-        `Le cours suit la vie du contrat : d'abord **l'identifier** (la distinguer des contrats voisins), puis **la former** (consentement et avant-contrats, chose, prix, conditions de forme), enfin **ses effets** : transfert de la propriété et des risques, puis obligations du vendeur (délivrance conforme, garantie d'éviction).`],
-      keys: ['vente', 'qualification', 'promesse unilatérale de vente', 'pacte de préférence', 'prix sérieux', 'transfert de propriété', 'délivrance']
+        `Le cours suit la vie du contrat : d'abord **l'identifier** (la distinguer des contrats voisins), puis **la former** (consentement et avant-contrats, chose, prix, conditions de forme), enfin **ses effets** : transfert de la propriété et des risques, obligations du vendeur (délivrance conforme, garanties d'éviction et des vices cachés, garantie de conformité, obligation de sécurité) et obligations de l'acheteur (payer, retirer).`],
+      keys: ['vente', 'qualification', 'promesse unilatérale de vente', 'pacte de préférence', 'prix sérieux', 'transfert de propriété', 'délivrance', 'vice caché', 'retirement']
     }
   };
   const QLIKE = /^(explique|expliquer|resume|c est quoi|qu est|pourquoi|comment|de quoi|donne|dis moi|quel|quelle|quels|quelles|quand|est ce|peux tu|tu peux|parle moi|montre|apprends|raconte|et (si|pour|la|le|les|l) )/;
@@ -514,76 +521,231 @@
       return { steps, blocks, speak: crit ? firstSentence(crit.body) : '', chips: [qz && { label: 'Teste-moi sur la différence', fn: () => quizItem(qz) }, { label: 'Explique ' + A.term, q: 'c\'est quoi ' + A.term }, { label: 'Explique ' + B.term, q: 'c\'est quoi ' + B.term }] };
     }
 
+    /* ---------- Cas pratique : repérer les problèmes, dire quoi écrire, guider pas à pas ---------- */
+    // Chaque schéma de raisonnement = un problème de droit type. Les mots des faits qui le déclenchent, et sa formulation abstraite.
+    const CASE = {
+      't-detention': [/locataire|emprunt|prete|depositaire|confie|detenteur|precaire|usufruit/, 'Celui qui détient la chose d\'autrui en vertu d\'un titre peut-il se prétendre possesseur ?'],
+      't-usucapion': [/depuis (plus de )?(\d+|dix|vingt|trente) ans|pendant (\d+|dix|vingt|trente) ans|usucap|prescription acquisitive|occupe .* depuis/, 'Une possession prolongée permet-elle d\'acquérir la propriété du bien d\'autrui ?'],
+      't-meuble-vole': [/\bvole|perdu|trouve|brocante|receleur|abus de confiance|en fait de meubles/, 'Le propriétaire d\'un meuble peut-il le revendiquer contre un acquéreur de bonne foi ?'],
+      't-double-vente': [/vendu deux fois|deux acheteurs|second acquereur|deuxieme acheteur|vend (a nouveau|ensuite) (le|la|son|sa) meme|deux ventes/, 'Entre deux acquéreurs successifs d\'un même bien, lequel l\'emporte ?'],
+      't-transfert': [/reserve de propriete|transfert de (la )?propriete|devient proprietaire|quand .* proprietaire/, 'À quel moment l\'acheteur devient-il propriétaire de la chose ?'],
+      't-qualif': [/echange|en contrepartie de (ses|son|des) service|fabriqu|sur mesure|euro symbolique|contre (un|des) (travaux|services)/, 'Le contrat conclu peut-il être qualifié de vente ?'],
+      't-avantcontrat': [/promesse|promis de|pacte de preference|en priorite|preference|lever l option|leve l option|option/, 'Quelle est la nature de l\'engagement pris avant la vente, et quelle sanction en cas de violation ?'],
+      't-lesion': [/prix (vil|derisoire|ridicule|tres bas|insignifiant)|lesion|sous[- ]evalu|moitie de (sa )?valeur|7\/12|euro symbolique|prix (sera |serait )?fixe (plus tard|par|ulterieurement)/, 'Le prix stipulé permet-il de remettre en cause la vente ?'],
+      't-risques': [/detruit|incendie|brule|perit|tempete|inondation|cas fortuit|disparu|grele|foudre/, 'Qui supporte la perte de la chose survenue par cas fortuit ?'],
+      't-defaut': [/servitude|revendique|evinc|reinstall|en face|concurren|autre modele|pas (celle|celui|ceux|celles) (commande|prevu|convenu)|au lieu d(e|u|es)|ne correspond pas|non conforme|commande/, 'Sur quel fondement l\'acheteur déçu ou troublé peut-il agir contre le vendeur ?'],
+      't-vices': [/panne|ne (fonctionne|marche|demarre) (plus|pas)|defaut|\bvice|fissure|termite|infiltration|fuite|defectu|humidite|se casse|cass[ee]|moteur|rouill|mal fabrique|vetuste/, 'L\'acheteur peut-il obtenir la garantie du vendeur pour un défaut de la chose révélé après la vente, et que peut-il obtenir ?'],
+      't-conso': [/consommat|magasin|enseigne|boutique|grande surface|site internet|en ligne|neuf chez/, 'Le consommateur peut-il exiger du vendeur professionnel la mise en conformité du bien, voire la réduction du prix ou la résolution ?'],
+      't-action': [/quel(le)?s? (action|fondement|recours)|quels sont ses recours|sur quel fondement|que peut[- ](il|elle) faire/, 'Quelle action l\'acheteur doit-il exercer, et peut-il choisir entre plusieurs fondements ?'],
+      't-impaye': [/n.?a (toujours |jamais )?pas (paye|regle)|impaye|ne paie pas|ne paye pas|refuse de payer|ne vient pas (chercher|retirer)|pas venu chercher|n.?est (jamais )?pas venu|retir/, 'De quels moyens dispose le vendeur face à un acheteur qui ne paie pas ou ne retire pas la chose ?'],
+      't-soc-qualif': [/concubin|exploitent ensemble|mettent en commun|societe (creee )?de fait|indivision|association|en participation/, 'La situation peut-elle être qualifiée de société ?'],
+      't-soc-formation': [/en formation|avant (son |l )?immatricul|pas encore immatricul|au nom de la (future )?societe|reprise des actes|reprendre (le|les) (bail|contrat|acte)/, 'Qui est tenu des actes accomplis au nom d\'une société en formation ?'],
+      't-soc-dettes': [/creancier|dettes? (de la societe|sociale)|poursui(t|vre) (l|les|un) associe|\bsnc\b|\bsci\b|societe civile/, 'Le créancier de la société peut-il poursuivre personnellement un associé ?'],
+      't-soc-abus': [/assemblee|\bvote|majoritaire|minoritaire|abus de (majorite|minorite)|mise en reserve|dividende|bloque/, 'La décision adoptée en assemblée peut-elle être remise en cause pour abus ?'],
+      't-soc-objet': [/objet social|hors (de l )?objet|depasse l objet|pouvoirs? du (gerant|dirigeant)|le gerant (signe|engage|conclut)/, 'La société est-elle engagée par l\'acte de son dirigeant qui dépasse l\'objet social ?']
+    };
+    const allTrees = () => DATA.allTrees || DATA.trees;
+    const treeMat = T => MATIERES.find(M => M.chapters.some(c => c.id === T.ch));
+    const lc = s => s.charAt(0).toLowerCase() + s.slice(1);
+    function splitFacts(q) {
+      const all = q.split(/(?<=(?<!\b(?:M|Mme|Mlle|Me|Dr|art|al|Cass|civ|com|ch|ex|av|St))[.!?;])\s+|\n+/).map(s => s.trim()).filter(s => s.length > 6);
+      return { all, facts: all.filter(s => !/\?\s*$/.test(s)), questions: all.filter(s => /\?\s*$/.test(s)) };
+    }
+    // Les problèmes de droit que soulèvent les faits (un schéma de raisonnement par problème)
+    function issuesOf(q) {
+      const n = norm(q).replace(/[’']/g, ' '), M = cur();
+      const scored = allTrees().map(T => {
+        const c = CASE[T.id]; let s = 0;
+        if (c) s = (n.match(new RegExp(c[0].source, 'g')) || []).length;
+        if (s && treeMat(T) === M) s += .5;
+        return { T, s };
+      }).filter(x => x.s >= 1);
+      if (!scored.length) { // aucun déclencheur connu : on cherche le schéma dont les mots recoupent le plus les faits
+        const ft = new Set(toks(q).filter(w => w.length > 3));
+        allTrees().filter(T => treeMat(T) === M).forEach(T => {
+          const tt = new Set(toks(T.title + ' ' + T.blurb + ' ' + Object.values(T.nodes).map(x => (x.q || x.r) + ' ' + (x.o || []).map(o => o[0]).join(' ')).join(' ')));
+          const s = [...ft].filter(w => tt.has(w)).length / 4;
+          if (s >= 1) scored.push({ T, s });
+        });
+      }
+      let out = scored.sort((a, b) => b.s - a.s);
+      const home = out.filter(x => treeMat(x.T) === M);
+      // une autre matière ne s'invite que si les faits la désignent nettement et que la matière ouverte ne répond pas
+      out = out.filter(x => treeMat(x.T) === M || (!home.length && x.s >= 2));
+      // « quelle action ? » n'a de sens que si un défaut de la chose est en cause
+      if (!out.some(x => ['t-vices', 't-defaut', 't-conso'].includes(x.T.id))) out = out.filter(x => x.T.id !== 't-action');
+      return out.slice(0, 3).map(x => x.T);
+    }
+    // La phrase des faits qui parle le plus d'un texte (question du schéma, option…)
+    function factFor(text, facts) {
+      const tt = new Set(toks(text).filter(w => w.length > 3 && !GENERIC.has(w)));
+      let best = null, bs = 0;
+      facts.forEach(f => { const s = new Set(toks(f).filter(w => tt.has(w))).size; if (s > bs) { bs = s; best = f; } });
+      return bs >= 1 ? best : null;
+    }
+    // On avance dans le schéma tant que les faits désignent clairement une réponse
+    function autoPath(T, facts) {
+      const path = []; let id = T.start, guard = 0;
+      const ft = new Set(facts.flatMap(f => toks(f)).filter(w => w.length > 3 && !GENERIC.has(w)));
+      const fn = ' ' + facts.map(f => norm(f).replace(/[^a-z0-9]+/g, ' ')).join(' ') + ' ';
+      const COMMON = new Set(['vente', 'vend', 'achet', 'acheteur', 'vendeur', 'societ', 'associ', 'oui', 'non', 'chos', 'bien', 'contrat']);
+      while (T.nodes[id] && T.nodes[id].q && guard++ < 8) {
+        const nd = T.nodes[id], qt = new Set(toks(nd.q));
+        // on ne compte que les mots propres à chaque option (pas ceux de la question ni des autres options), et les expressions entières
+        const sc = nd.o.map(([lab, next], i) => {
+          const others = new Set(nd.o.filter((_, j) => j !== i).flatMap(o => toks(o[0])));
+          const own = [...new Set(toks(lab))].filter(w => w.length > 3 && !others.has(w) && !qt.has(w) && !COMMON.has(w) && !GENERIC.has(w));
+          let sc = own.filter(w => ft.has(w)).reduce((a, w) => a + (w.length >= 7 ? 2 : 1), 0);
+          const lw = norm(lab).replace(/[^a-z0-9]+/g, ' ').trim().split(' ');
+          for (let k = 0; k + 2 < lw.length; k++) { const ph = lw.slice(k, k + 3).join(' '); if (ph.length > 10 && fn.includes(' ' + ph + ' ')) { sc += 2; break; } }
+          return { lab, next, s: sc };
+        }).sort((a, b) => b.s - a.s);
+        if (!sc[0] || sc[0].s < 2 || (sc[1] && sc[1].s >= sc[0].s - 1)) break;
+        path.push({ q: nd.q, a: sc[0].lab, sent: factFor(sc[0].lab + ' ' + nd.q, facts), guess: true });
+        id = sc[0].next;
+      }
+      return { path, at: id };
+    }
+    function refList(ref) { return [...new Set(String(ref || '').match(/\bL\s?\d{3,4}(?:-\d+)?|\b\d{3,4}(?:-\d+)?\b/g) || [])].map(r => r.replace(/\s/g, '')).filter(r => !/^(19|20)\d\d$/.test(r)); }
+    function artDoc(r) { return docs.find(d => d.kind === 'Article' && refsOf('art. ' + (d.ref || d.title)).includes(r)) || docs.find(d => d.kind === 'Article' && refsOf(d.title + ' ' + (d.ref || '')).includes(r)); }
+    function rulesFor(T, path, leaf) {
+      const refs = [];
+      if (leaf && leaf.ref) refs.push(...refList(leaf.ref));
+      Object.values(T.nodes).forEach(x => { if (x.r && x !== leaf) refList(x.ref).forEach(r => refs.length < 6 && refs.push(r)); });
+      let out = uniqBy([...new Set(refs)].map(artDoc).filter(Boolean), d => d.id).slice(0, 3);
+      if (out.length < 2) { // pas d'article : la définition ou l'arrêt du cours qui porte la règle
+        const names = [leaf && leaf.ref, T.title].concat(Object.values(T.nodes).filter(x => x.r).map(x => x.ref)).filter(x => x && !/^Art/i.test(x));
+        [...new Set(names)].forEach(nm => { const r = idx.search(nm, 6, x => x.ch === T.ch && ['Définition', 'Arrêt', 'Article'].includes(x.kind) && mentions(x, nm)); const d = r.find(x => x.kind === 'Définition') || r[0]; if (d && out.length < 3) out.push(d); });
+        out = uniqBy(out, d => d.id);
+      }
+      return out;
+    }
+    // La copie modèle d'un problème : problème de droit, majeure, mineure, conclusion
+    function copyBlocks(T, path, leafId, facts, num) {
+      const leaf = T.nodes[leafId], pb = (CASE[T.id] || [])[1] || T.title, rules = rulesFor(T, path, leaf && leaf.r ? leaf : null);
+      const B = [['h', (num ? num + '. ' : '') + T.title]];
+      B.push(['p', '**Problème de droit.** ' + pb]);
+      const maj = rules.map(d => d.kind === 'Article' ? '**' + artLabel(d) + '** : ' + firstSentence(d.body).replace(/^(Art\.|Article)[^:«]{0,40}:\s*/, '') : (norm(plain(d.body)).startsWith(norm(plain(d.title)).slice(0, 12)) ? firstSentence(d.body) : '**' + plain(d.title).split(' · ').pop() + '** : ' + firstSentence(d.body)));
+      if (leaf && leaf.r) maj.push('Règle à retenir : ' + leaf.r + (leaf.ref ? ' (' + leaf.ref + ')' : ''));
+      B.push(['p', '**En droit (majeure).** ' + (maj.length ? '' : 'Pose la règle et cite ses articles.')]);
+      if (maj.length) B.push(['ul', maj]);
+      const min = path.map(s => (s.sent ? 'Les faits indiquent : « ' + s.sent.replace(/[.;]$/, '') + ' ». ' : '') + s.q.replace(/\s*\?$/, '') + ' : **' + lc(s.a) + '**' + (s.guess ? ' *(je le déduis des faits : vérifie)*' : '') + '.');
+      const nd = T.nodes[leafId];
+      if (nd && nd.q) { const f = factFor(nd.q + ' ' + nd.o.map(o => o[0]).join(' '), facts); min.push('**À toi de trancher** : ' + nd.q + (f ? ' Regarde : « ' + f.replace(/[.;]$/, '') + ' ».' : '') + ' Options : ' + nd.o.map(o => '« ' + o[0] + ' »').join(', ') + '.'); }
+      B.push(['p', '**En l\'espèce (mineure).**']);
+      B.push(['ul', min.length ? min : ['Reprends chaque condition de la règle et confronte-la aux faits précis (dates, qualités des parties, ce qui a été dit ou signé).']]);
+      B.push(['p', '**En conclusion.** ' + (leaf && leaf.r ? 'En l\'espèce, ' + lc(firstSentence(leaf.r)) : 'Réponds à la question posée par oui ou par non, puis dis ce que la personne peut obtenir.')]);
+      return { blocks: B, docs: rules };
+    }
     function cas(q) {
+      const F = splitFacts(q), issues = issuesOf(q);
       const hints = factHints(q), hq = hints.join(' ');
       const found = uniqBy(concepts(hq + ' . ' + q).filter(c => !GENERIC.has(c.key)), c => norm(c.term)).slice(0, 4);
-      const hits = uniqBy((hq ? idx.search(hq, 20) : []).concat(idx.search(q, 20)), d => d.id);
-      // la règle part des notions repérées (et non de mots isolés)
-      const Gs = found.slice(0, 2).map(f => gather(f.term, hq + ' ' + q));
-      const onTopic = d => found.slice(0, 3).some(f => mentions(d, f.term));
-      const BROAD = /^(vente|nullite|prix|chose|contrat|propriete|bien|acheteur|vendeur|succession|meuble|immeuble|proprietaire|acquereur)$/;
-      // une notion et ses alias (ex. usucapion = prescription acquisitive, donné entre parenthèses dans la définition)
-      const aliases = f => [f.term].concat([...String(f.def || '').matchAll(/\(([^()]{4,40})\)/g)].map(m => m[1]).filter(x => !/art\./i.test(x))).map(x => ' ' + lexKey(x) + ' ');
-      const inBody = d => found.slice(0, 3).filter(f => !BROAD.test(lexKey(f.term))).some(f => aliases(f).some(k => keyOf(d.body).includes(k)));
-      let arts = uniqBy((Gs[0] ? Gs[0].arts : []).concat(Gs.slice(1).flatMap(g => g.arts), hits.filter(d => d.kind === 'Article')).filter(inBody), artLabel).slice(0, 3);
-      if (!arts.length && !found.length) arts = uniqBy(hits.filter(d => d.kind === 'Article'), artLabel).slice(0, 2);
-      const arrets = uniqBy(Gs.flatMap(g => g.arrets.slice(0, 2)).concat(hits.filter(d => d.kind === 'Arrêt' && onTopic(d))), d => arrLabel(d).slice(0, 25)).slice(0, 3);
-      const sentences = q.split(/(?<=[.?!])\s+/), question = sentences.filter(s => /\?/.test(s)).pop();
-      const main = found[0] || null; if (main) setTopic(main);
-      const G = main ? gather(main.term, q) : null;
-      const cond = G ? G.fiche.find(d => /condition|crit[eè]re|exig/i.test(d.title + ' ' + d.body)) : null;
-      const keyPass = G ? G.strong.filter(d => ['Fiche', 'Tableau'].includes(d.kind)).slice(0, 1) : [];
-      const casList = [];
-      MATIERES.forEach(M => M.chapters.forEach(c => ((DATA.all[c.id] || {}).cas || []).forEach(x => casList.push({ x, c, M }))));
-      const qt = new Set(toks(q)); const sim = casList.map(o => [toks(o.x.title + ' ' + (o.x.facts || o.x.faits || '')).filter(w => qt.has(w)).length, o]).sort((a, b) => b[0] - a[0])[0];
+      if (found[0]) setTopic(found[0]);
+      const hits = uniqBy((hq ? idx.search(hq, 12) : []).concat(idx.search(q, 12)), d => d.id);
       const steps = [
-        { t: 'Je lis les faits et je repère les mots qui déclenchent une règle' + (found.length ? ' : ' + found.map(f => '**' + f.term + '**').join(', ') : ''), docs: hits.slice(0, 6) },
-        hints.length ? { t: 'Les faits me font penser à : ' + hints.map(x => '*' + x.split(' ').slice(0, 4).join(' ') + '*').join(' ; ') } : null,
-        { t: 'Je qualifie juridiquement la situation', docs: G ? G.strong.slice(0, 3) : [] },
-        arts.length ? { t: 'Je cherche la **majeure** (textes) : ' + arts.map(artLabel).join(', '), docs: arts } : { t: 'Pas d\'article évident : je cherche des principes du cours' },
-        arrets.length ? { t: 'Je regarde la jurisprudence applicable', docs: arrets } : null,
-        { t: 'Je prépare la **mineure** : appliquer chaque condition aux faits' }
+        { t: 'Je lis les faits (' + F.facts.length + ' phrases) et je repère ce qui déclenche une règle' + (found.length ? ' : ' + found.map(f => '**' + f.term + '**').join(', ') : ''), docs: hits.slice(0, 6) },
+        issues.length ? { t: 'Je vois ' + issues.length + ' problème' + (issues.length > 1 ? 's' : '') + ' de droit : ' + issues.map(T => '*' + T.title + '*').join(' ; ') } : { t: 'Je ne reconnais pas de problème type : je cherche les règles les plus proches' },
+        { t: 'Je déroule le schéma de raisonnement de chaque problème avec tes faits' },
+        { t: 'Je rédige ce que tu dois écrire : majeure, mineure, conclusion' }
       ];
-      const blocks = [['p', pick(openers.cas)],
-        ['h', '1. Qualification'], ['p', found.length ? 'Les faits évoquent : ' + found.map(f => '**' + f.term + '**' + (f.def ? ' (' + firstSentence(f.def).replace(/\.$/, '') + ')' : '')).join(' ; ') + '.' : 'Je ne reconnais pas de notion précise : reformule avec les mots du cours (vente, possession, prix…).'],
-        ['h', '2. Problème de droit'], ['p', (question ? 'La question posée : « ' + question.trim() + ' ». ' : '') + 'Reformule-la de façon **abstraite**, sans les prénoms' + (found[0] ? ', autour de la notion de **' + found[0].term + '**' : '') + ' : « Un … peut-il … ? »'],
-        ['h', '3. Majeure (la règle)']];
-      arts.forEach(a => blocks.push(['rule', a.body, artLabel(a)]));
-      arrets.forEach(a => blocks.push(['p', a.passage ? a.body : '**' + plain(a.title) + '** : ' + firstSentence(a.body)]));
-      if (keyPass[0] && !arts.some(a => mentions(a, main.term))) blocks.push(['p', '**Ton cours, sur ' + main.term + ' :** ' + keyPass[0].body]);
-      else if (!arts.length && !arrets.length && G && G.def) blocks.push(['p', G.def]);
-      blocks.push(['h', '4. Mineure (à toi)']);
-      blocks.push(['p', cond ? 'Vérifie une par une ces conditions dans les faits :\n' + cond.body : 'Reprends chaque élément de la règle et dis si les faits le remplissent, en citant les faits précis.']);
-      blocks.push(['h', '5. Conclusion']);
-      blocks.push(['p', '**À toi :** écris ta conclusion (et ta mineure si tu veux) ici, je te corrige.']);
-      if (sim && sim[0] >= 3) blocks.push(['tip', 'Ça ressemble au cas « ' + sim[1].x.title + ' » (' + sim[1].M.title + ', ch. ' + sim[1].c.n + ') : son corrigé peut t\'aider.']);
-      blocks.push(['src', [...arts, ...arrets, ...(G ? G.strong.slice(0, 2) : [])]]);
-      conv.pending = { type: 'cas', kw: [...new Set(arts.slice(0, 2).concat(keyPass).flatMap(d => keywords(d.body)).concat(found.slice(0, 2).flatMap(f => toks(f.term))))].slice(0, 8), refs: arts.flatMap(a => refsOf(a.title)), docs: [...keyPass, ...arts, ...arrets] };
-      return { steps, blocks, speak: 'On le traite comme au partiel. Je t\'ai préparé la qualification et la règle ; à toi la mineure.', chips: [{ label: 'Donne-moi la solution', fn: casSolution }] };
+      const blocks = [['p', pick(openers.cas) + (F.questions.length ? ' La question : « ' + F.questions[F.questions.length - 1] + ' »' : '')]];
+      const plans = issues.map(T => Object.assign({ T }, autoPath(T, F.facts)));
+      const rom = ['I', 'II', 'III'], used = [];
+      if (plans.length) {
+        blocks.push(['h', 'Ton plan de copie']);
+        blocks.push(['ol', plans.map(p => '**' + (CASE[p.T.id] || [])[1] + '**' + (treeMat(p.T) !== cur() ? ' *(' + treeMat(p.T).title + ')*' : ''))]);
+        if (plans.length > 1) blocks.push(['tip', 'Un problème = une partie, dans l\'ordre logique (on qualifie avant de chercher le régime). Chaque partie suit le même syllogisme.']);
+        plans.forEach((p, i) => { const c = copyBlocks(p.T, p.path, p.at, F.facts, plans.length > 1 ? rom[i] : ''); blocks.push(...c.blocks); used.push(...c.docs); });
+      } else {
+        const G = found[0] ? gather(found[0].term, q) : null;
+        const arts = uniqBy((G ? G.arts : []).concat(hits.filter(d => d.kind === 'Article')), artLabel).slice(0, 3);
+        blocks.push(['h', '1. Qualification'], ['p', found.length ? 'Les faits évoquent : ' + found.map(f => '**' + f.term + '**' + (f.def ? ' (' + firstSentence(f.def).replace(/\.$/, '') + ')' : '')).join(' ; ') + '.' : 'Je ne reconnais pas de notion précise : reformule avec les mots du cours.']);
+        blocks.push(['h', '2. Majeure']); arts.forEach(a => blocks.push(['rule', a.body, artLabel(a)]));
+        blocks.push(['h', '3. Mineure'], ['p', 'Reprends chaque condition de la règle et dis si les faits la remplissent, en citant les faits précis.']);
+        used.push(...arts);
+      }
+      const traps = uniqBy(issues.flatMap(T => idx.search(T.title + ' ' + T.blurb, 30, d => d.kind === 'Piège' && d.ch === T.ch).slice(0, 1)), d => d.id);
+      if (traps[0]) blocks.push(['trap', traps[0].body]);
+      blocks.push(['tip', '**Méthode.** Pour chaque problème : faits utiles → problème de droit (abstrait, sans prénoms) → **en droit** (règle + articles) → **en l\'espèce** (chaque condition confrontée aux faits) → **conclusion** qui répond à la question. Envisage aussi l\'argument contraire.']);
+      const sim = similarCas(q);
+      if (sim) blocks.push(['p', 'Cas voisin corrigé dans ton cours : « ' + sim.x.title + ' » (' + sim.M.title + ', ch. ' + sim.c.n + ').']);
+      blocks.push(['src', [...used, ...traps, ...hits.filter(d => d.mat === cur()).slice(0, 3)]]);
+      conv.cas = { q, F, plans };
+      conv.pending = { type: 'cas', kw: [...new Set(used.flatMap(d => keywords(d.body)).concat(plans.flatMap(p => { const l = p.T.nodes[p.at]; return l && l.r ? keywords(l.r) : []; })).concat(found.slice(0, 2).flatMap(f => toks(f.term))))].slice(0, 10), refs: used.flatMap(a => refsOf('art. ' + (a.ref || a.title))), docs: used };
+      conv.casPend = conv.pending;
+      return {
+        steps, blocks, speak: issues.length ? 'Ton cas soulève ' + issues.length + ' problème' + (issues.length > 1 ? 's' : '') + '. Je t\'ai fait le plan et ce qu\'il faut écrire.' : 'Je t\'ai préparé la qualification et la règle.',
+        chips: plans.map((p, i) => ({ label: 'Résoudre pas à pas' + (plans.length > 1 ? ' : ' + rom[i] : ''), fn: () => walkStart(p.T) }))
+          .concat([{ label: 'Je rédige, tu corriges', fn: () => { conv.pending = conv.casPend; reply({ blocks: ['Écris ta réponse (au moins la mineure et la conclusion) dans le champ ci-dessous : je la corrige.'] }); } },
+            llmOn() && { label: 'Rédige la copie avec l\'IA', fn: () => llmTurn('Rédige une copie de cas pratique complète (problème de droit, majeure avec les articles des extraits, mineure appliquée aux faits, conclusion) pour : ' + q, null) }])
+      };
+    }
+    function similarCas(q) {
+      const list = []; MATIERES.forEach(M => M.chapters.forEach(c => ((DATA.all[c.id] || {}).cas || []).forEach(x => list.push({ x, c, M }))));
+      const qt = new Set(toks(q).filter(w => w.length > 3));
+      const best = list.map(o => [new Set(toks(o.x.title + ' ' + o.x.facts).filter(w => qt.has(w))).size, o]).sort((a, b) => b[0] - a[0])[0];
+      return best && best[0] >= 4 ? best[1] : null;
+    }
+    // Résolution guidée : une question du schéma à la fois, avec la phrase des faits à regarder
+    function walkStart(T) { conv.walk = { T, id: T.start, path: [], facts: conv.cas ? conv.cas.F.facts : [] }; user('Résolvons « ' + T.title + ' » pas à pas'); return walkShow(); }
+    function walkShow() {
+      const w = conv.walk, nd = w.T.nodes[w.id];
+      if (!nd) return reply({ blocks: ['Schéma incomplet.'] });
+      if (nd.r) {
+        const c = copyBlocks(w.T, w.path, w.id, w.facts, '');
+        conv.walk = null;
+        const next = conv.cas && conv.cas.plans.find(p => p.T !== w.T && !(conv.done || []).includes(p.T.id));
+        conv.done = (conv.done || []).concat(w.T.id);
+        return reply({ steps: [{ t: 'Je suis arrivé au bout du schéma : ' + (nd.tone === 'ok' ? 'la règle joue' : nd.tone === 'ko' ? 'la règle ne joue pas' : 'solution nuancée'), docs: c.docs }], blocks: [['p', '**Résultat.** ' + nd.r + (nd.ref ? ' (' + nd.ref + ')' : '')], ['h', 'Ce que tu écris']].concat(c.blocks.slice(1)), chips: [next && { label: 'Problème suivant : ' + next.T.title.slice(0, 40), fn: () => walkStart(next.T) }, conv.casPend && { label: 'Je rédige, tu corriges', fn: () => { conv.pending = conv.casPend; reply({ blocks: ['Vas-y, écris ta réponse : je la corrige.'] }); } }, { label: 'Ouvrir le schéma', fn: () => { location.hash = '#/schemas/' + w.T.id; } }] });
+      }
+      const f = factFor(nd.q + ' ' + nd.o.map(o => o[0]).join(' '), w.facts);
+      return reply({ blocks: [['p', '**Étape ' + (w.path.length + 1) + '.** ' + nd.q], f ? ['tip', 'Dans tes faits : « ' + f + ' »'] : null].filter(Boolean), chips: nd.o.map(([lab, next]) => ({ label: lab, fn: () => { user(lab); w.path.push({ q: nd.q, a: lab, sent: factFor(lab + ' ' + nd.q, w.facts) }); w.id = next; walkShow(); } })) });
+    }
+    // Donne-moi un cas : un cas pratique du cours, à rédiger
+    function giveCas(t) {
+      const M = cur(), list = M.chapters.flatMap(c => ((DATA.all[c.id] || {}).cas || []).map(x => ({ x, c })));
+      let pool = t ? list.filter(o => t.ch === o.c.id || keyOf(o.x.facts + ' ' + o.x.corrige).includes(' ' + lexKey(t.term) + ' ')) : [];
+      if (!pool.length) pool = list;
+      if (!pool.length) return { blocks: ['Pas de cas pratique dans ce cours pour l\'instant.'] };
+      const o = pick(pool);
+      conv.cas = null;
+      conv.pending = { type: 'cas', kw: keywords(o.x.corrige).slice(0, 10), refs: refsOf(o.x.corrige), docs: [], corrige: o.x.corrige, facts: o.x.facts };
+      return { steps: [{ t: 'Je choisis un cas du chapitre ' + o.c.n + ' (' + o.c.short + ')' }], blocks: [['h', o.x.title], ['p', o.x.facts], ['p', '**À toi.** Rédige ta réponse (problème de droit, règle, application, conclusion) : je te corrige et je te montre le corrigé.']], chips: [{ label: 'Aide-moi à le résoudre', fn: () => { const f = o.x.facts; conv.pending = null; user('Aide-moi à le résoudre'); reply(cas(f)); } }, { label: 'Montre le corrigé', fn: () => { conv.pending = null; reply({ blocks: [['h', 'Corrigé'], ['p', o.x.corrige]] }); } }] };
+    }
+    function casMethod() {
+      conv.pending = { type: 'casWait' };
+      return { blocks: [['p', 'Colle-moi les **faits** et la **question** de ton cas : je repère les problèmes de droit, je te dis quoi écrire pour chacun, et on peut le résoudre pas à pas.'], ['h', 'La méthode, en attendant'], ['ol', ['**Faits utiles** : qui, quoi, quand, la qualité des parties (professionnel, consommateur…).', '**Qualification** : traduis les faits en notions juridiques.', '**Problème de droit** : une question abstraite, sans prénoms.', '**En droit** : la règle, avec les articles et les arrêts du cours.', '**En l\'espèce** : chaque condition confrontée aux faits précis.', '**Conclusion** : réponds à la question, puis dis ce que la personne peut obtenir.']], ['tip', 'Plusieurs problèmes ? Une partie par problème, dans l\'ordre logique.']], chips: [{ label: 'Donne-moi un cas', fn: () => reply(giveCas(conv.topic)) }] };
     }
     function casSolution() {
-      const p = conv.pending; conv.pending = null;
-      if (!p || p.type !== 'cas') return reply({ blocks: ['Il n\'y a pas de cas en cours.'] });
+      const c = conv.cas; conv.pending = null;
+      if (!c || !c.plans.length) return reply({ blocks: ['Il n\'y a pas de cas en cours.'] });
       user('Donne-moi la solution');
-      return reply({ steps: [{ t: 'Je reprends la règle et je l\'applique', docs: p.docs }], blocks: [['p', 'Sans les faits complets, je ne peux pas trancher à ta place, mais voici la structure de la solution :'], ['ol', p.docs.slice(0, 3).map(d => '**' + (d.kind === 'Article' ? artLabel(d) : arrLabel(d)) + '** : ' + firstSentence(d.body) + ' → les faits remplissent-ils chaque condition ?')], ['tip', 'Conclusion type : « En l\'espèce, les conditions de … étant (ou non) réunies, X pourra (ou non) … »']] });
+      return walkStart(c.plans[0].T);
     }
     function gradeCas(text) {
       const p = conv.pending; conv.pending = null;
       const got = toks(text), hit = p.kw.filter(w => got.some(g => close(g, w))), refHit = p.refs.filter(r => refsOf('art. ' + text.replace(/\b(\d{3,4})\b/g, 'art. $1')).includes(r));
       const r = p.kw.length ? hit.length / p.kw.length : 0;
-      const struct = /en l.?esp[eè]ce|en (l.?)?occurrence|or,|ici/i.test(text), concl = /donc|par cons[eé]quent|ainsi|en conclusion|pourra|ne pourra|peut|ne peut/i.test(text);
+      const struct = /en l.?esp[eè]ce|en (l.?)?occurrence|or,|ici/i.test(text), concl = /donc|par cons[eé]quent|ainsi|en conclusion|pourra|ne pourra|peut|ne peut/i.test(text), pb = /probl[eè]me de droit|la question (est|se pose)|peut-il|peut-elle|\?/i.test(text), law = /en droit|selon l.?art|aux termes|dispose|l.?article/i.test(text);
       const blocks = [['p', r > .5 ? 'Bon raisonnement.' : r > .25 ? 'Il y a des bonnes choses, mais c\'est incomplet.' : 'Tu restes trop loin de la règle.']];
       const list = [];
-      const cited = refsOf('art. ' + text.replace(/\b(\d{3,4})\b/g, 'art. $1')).filter(r => !refHit.includes(r));
+      const cited = refsOf('art. ' + text.replace(/\b(\d{3,4})\b/g, 'art. $1')).filter(x => !refHit.includes(x));
       if (refHit.length) list.push('Tu cites ' + refHit.map(x => 'l\'art. ' + x).join(', ') + ' : c\'est le bon texte.');
-      cited.forEach(r => { const d = idx.search('art. ' + r, 1, x => refsOf(x.title + ' ' + (x.ref || '')).includes(r))[0] || idx.search('art. ' + r, 1, x => refsOf(x.body).includes(r))[0]; list.push(d ? 'Tu cites l\'**art. ' + r + '** : dans ton cours, ' + firstSentence(d.body) + ' Vérifie qu\'il colle bien aux faits.' : 'Tu cites l\'art. ' + r + ', que je ne trouve pas dans ton cours : vérifie le numéro.'); });
+      cited.forEach(x => { const d = artDoc(x); list.push(d ? 'Tu cites l\'**art. ' + x + '** : dans ton cours, ' + firstSentence(d.body) + ' Vérifie qu\'il colle bien aux faits.' : 'Tu cites l\'art. ' + x + ', que je ne trouve pas dans ton cours : vérifie le numéro.'); });
       if (!refHit.length && !cited.length) list.push('Tu ne cites aucun texte' + (p.refs.length ? ' (pense à l\'art. ' + p.refs[0] + ')' : '') + ' : au partiel, ce sont des points perdus.');
+      list.push(pb ? 'Tu poses le problème de droit : bien.' : 'Commence par poser le **problème de droit** sous forme de question abstraite.');
+      list.push(law ? 'Tu exposes la règle (« en droit ») : bien.' : 'Je ne vois pas de **majeure** : « En droit, l\'art. … dispose que… ».');
       list.push(struct ? 'Tu appliques aux faits (« en l\'espèce ») : bien.' : 'Je ne vois pas l\'application aux faits : écris « En l\'espèce, … » et reprends les faits précis.');
       list.push(concl ? 'Tu conclus : bien.' : 'Il manque une conclusion nette qui répond à la question posée.');
-      const miss = p.kw.filter(w => !hit.includes(w)).slice(0, 5).map(w => surface(w, p.docs.map(d => d.body).join(' ')));
-      if (miss.length) list.push('Notions de la règle absentes de ta réponse : ' + miss.map(m => '**' + m + '**').join(', ') + '.');
+      const miss = p.kw.filter(w => !hit.includes(w)).slice(0, 5).map(w => surface(w, (p.corrige || '') + ' ' + p.docs.map(d => d.body).join(' ')));
+      if (miss.length) list.push('Notions attendues absentes de ta réponse : ' + miss.map(m => '**' + m + '**').join(', ') + '.');
       blocks.push(['ul', list]);
-      return { steps: [{ t: 'Je compare ta réponse à la règle applicable', docs: p.docs }, { t: 'Je vérifie la structure : majeure, mineure, conclusion' }], blocks, speak: blocks[0][1] };
+      const note = Math.max(4, Math.min(20, Math.round(4 + r * 10 + (pb ? 1.5 : 0) + (law ? 1.5 : 0) + (struct ? 1.5 : 0) + (concl ? 1.5 : 0) + (refHit.length ? 1 : 0))));
+      blocks.push(['p', '**Ma note indicative : ' + note + '/20.**']);
+      if (p.corrige) blocks.push(['h', 'Le corrigé'], ['p', p.corrige]);
+      const c = conv.cas;
+      return { steps: [{ t: 'Je compare ta réponse à la règle applicable', docs: p.docs }, { t: 'Je vérifie la structure : problème, majeure, mineure, conclusion' }], blocks, speak: blocks[0][1], chips: c && c.plans.length ? [{ label: 'Voir la solution pas à pas', fn: casSolution }] : [] };
     }
 
     function revise() {
@@ -837,7 +999,7 @@ Tes règles :
 - Si les extraits ne répondent pas, tu le dis franchement, puis tu donnes ce que tu sais en précisant que c'est hors de son cours.
 - Tu expliques, tu ne recopies pas : reformule avec tes mots, dis à quoi sert la règle et qui elle protège, relie les notions entre elles, donne un exemple concret (une petite histoire avec des personnages) quand c'est utile.
 - Pour une question large (une matière, un chapitre) : commence par l'idée générale en deux phrases, puis déroule le plan dans l'ordre, une ou deux phrases par étape.
-- Pour un cas pratique : qualification des faits, problème de droit, règle (majeure), application (mineure), conclusion.
+- Pour un cas pratique : repère chaque problème de droit (un par partie), et pour chacun dis-lui exactement quoi écrire : le problème de droit en une question abstraite, la règle avec les articles des extraits (majeure), l'application aux faits précis en citant les faits (mineure), une conclusion qui répond à la question. Signale l'argument contraire et le piège.
 - Mise en forme : paragraphes courts, **gras** pour les notions clés, listes avec « - » quand ça aide. Pas de titres avec #. Entre 150 et 350 mots sauf si elle demande plus court ou plus long.
 - Termine par UNE courte question pour vérifier qu'elle a compris ou pour la faire réfléchir.`;
     }
@@ -1108,6 +1270,7 @@ Tes règles :
         conv.pending = null;
       }
       if (conv.pending && conv.pending.type === 'cas' && q.length > 25 && !/\?$/.test(q)) return gradeCas(q);
+      if (conv.pending && conv.pending.type === 'casWait') { conv.pending = null; if (q.length > 60) return cas(q); }
       if (/^(stop|arrete)/.test(n)) { conv.pending = null; return { blocks: ['D\'accord, on arrête là.'] }; }
       if (/^(un )?indice\b|^aide\b/.test(n)) return { blocks: ['Un indice sur quoi ? Dis « **interroge-moi** » et je te pose une question ; là, je pourrai t\'aider.'], chips: [{ label: 'Interroge-moi', fn: () => quiz(conv.topic) }] };
       if (!llmOn() || noLLM) { const st = smallTalk(q); if (st) return st; }
@@ -1132,6 +1295,8 @@ Tes règles :
       if (it.main === 'thanks') return { blocks: [pick(['Avec plaisir.', 'De rien !', 'Je suis là.']) + ' On continue ? Demande-moi une notion, une différence, ou colle-moi un cas pratique.'], chips: [{ label: 'Interroge-moi', fn: () => quiz(null) }, { label: 'Par quoi je commence ?', q: 'par quoi je commence ?' }] };
       if (it.main === 'revise') return revise();
       if (it.main === 'cas') return cas(q);
+      if (it.main === 'casgive') { const t = found[0] || conv.topic; return giveCas(t); }
+      if (it.main === 'casmethod') return casMethod();
       if (it.main === 'quiz') { const t = found[0] || (/dessus|la-dessus|ca\b/.test(n) ? conv.topic : null); if (t) setTopic(t); return quiz(t); }
       const sc = overviewScope(q);
       if (llmOn() && !noLLM) return llmTurn(q, sc).catch(e => { bubble('prof sys', h('p', null, 'L\'IA locale a calé (' + e.message + '). Je réponds avec mon moteur simple.')); const r = localAnswer(q, true); return r && r.then ? r : reply(r); });
@@ -1185,7 +1350,7 @@ Tes règles :
     /* ---------- contexte pour Claude ---------- */
     const ctx = {
       bubble, block, srcList, scroll, log, hooks, items, docs, idx, P, saveProfile, lessonsOf, pointsOf, chapById, lp,
-      search: (q, n) => idx.search(q, n),
+      search: (q, n) => idx.search(q, n), issues: q => issuesOf(q),
       byId: id => docs.find(d => d.id === id),
       chapterOf: ch => MATIERES.flatMap(M => M.chapters).find(c => c.id === ch),
       ficheText(ch) {
@@ -1204,7 +1369,7 @@ Tes règles :
       }
     };
 
-    return { el, ask, start, explainItem, lesson: ch => (busy ? null : (ch ? lessonStart(ch) : reply(lessonPicker('lesson')))), get busy() { return busy; }, reset() { log.replaceChildren(); conv.topic = null; conv.pending = null; conv.lesson = null; llmHist = []; lessonHead(); Claude.reset(); start(); } };
+    return { el, ask, start, explainItem, lesson: ch => (busy ? null : (ch ? lessonStart(ch) : reply(lessonPicker('lesson')))), cas: () => (busy ? null : reply(casMethod())), get busy() { return busy; }, reset() { log.replaceChildren(); conv.topic = null; conv.pending = null; conv.cas = null; conv.walk = null; conv.casPend = null; conv.lesson = null; llmHist = []; lessonHead(); Claude.reset(); start(); } };
   }
 
   /* ================= Mode Claude (clé API personnelle) ================= */
@@ -1228,7 +1393,7 @@ Comment tu travailles :
 - Si la question dépasse le cours, tu peux répondre avec tes connaissances de droit français, mais dis clairement ce qui est « hors de ton cours » et reste prudent sur les dates et numéros d'articles dont tu n'es pas sûr.
 - Tu enseignes, tu ne récites pas : explique le raisonnement (pourquoi la règle existe, qui elle protège, comment elle s'articule avec les notions voisines), signale les pièges classiques de copie, fais des liens entre les deux matières quand ils existent.
 - Tu es socratique quand c'est utile : après une explication importante, pose UNE question de vérification courte. Quand elle répond, corrige précisément (ce qui est juste, ce qui manque, ce qui est faux), puis enregistre le résultat avec l'outil enregistrer_resultat si la question portait sur un élément du cours (identifiant connu).
-- Pour un cas pratique : méthode du syllogisme (qualification, problème de droit, majeure, mineure, conclusion). Ne fais pas tout à sa place si elle s'entraîne : guide-la, puis corrige.
+- Pour un cas pratique : commence par schema_raisonnement et chercher_cours. Donne-lui un plan de copie (un problème de droit par partie, dans l'ordre logique), puis pour chaque problème dis-lui précisément quoi écrire : problème de droit (question abstraite), en droit (règle + articles et arrêts du cours), en l'espèce (chaque condition confrontée aux faits précis qu'elle doit citer), conclusion qui répond à la question ; signale l'argument contraire et les pièges. Si elle veut s'entraîner, guide-la question par question au lieu de tout donner, puis corrige sa rédaction (note sur 20 justifiée).
 - Pour une dissertation ou un commentaire : problématique, plan en deux parties avec des titres qui portent une idée, hors-sujet à éviter.
 - Adapte-toi à son niveau : consulte sa progression (etat_eleve) quand elle demande quoi réviser, ou pour cibler une interro.
 - Tutoie-la, ton chaleureux mais exigeant, comme un bon chargé de TD. Réponds en français.
@@ -1245,12 +1410,17 @@ Comment tu travailles :
       { name: 'plan_du_cours', description: 'Plan d\'un chapitre découpé en parties de cours (index, titre), avec la progression de l\'étudiante sur chaque partie. À appeler avant de faire cours.', input_schema: { type: 'object', properties: { chapitre: { type: 'string', description: 'Identifiant du chapitre (ex : c3, v5).' } }, required: ['chapitre'], additionalProperties: false } },
       { name: 'lire_partie', description: 'Contenu complet d\'une partie de cours (texte de la fiche) et ses points clés, pour l\'enseigner ou corriger une restitution.', input_schema: { type: 'object', properties: { chapitre: { type: 'string' }, partie: { type: 'integer', description: 'Index de la partie (à partir de 0), donné par plan_du_cours.' } }, required: ['chapitre', 'partie'], additionalProperties: false } },
       { name: 'enregistrer_progression', description: 'Mémorise où elle en est dans un cours : partie atteinte et si elle est comprise (pour reprendre plus tard).', input_schema: { type: 'object', properties: { chapitre: { type: 'string' }, partie: { type: 'integer' }, comprise: { type: 'boolean' } }, required: ['chapitre', 'partie', 'comprise'], additionalProperties: false } },
+      { name: 'schema_raisonnement', description: 'Schémas de raisonnement (arbres de décision) du cours qui correspondent à des faits ou à une notion : la suite des questions à se poser, les solutions et leurs articles. Idéal pour un cas pratique.', input_schema: { type: 'object', properties: { requete: { type: 'string', description: 'Les faits du cas ou la notion.' } }, required: ['requete'], additionalProperties: false } },
       { name: 'enregistrer_resultat', description: 'Enregistre dans la répétition espacée le résultat de l\'étudiante sur un élément du cours : 2 = su, 1 = partiellement, 0 = raté.', input_schema: { type: 'object', properties: { id: { type: 'string', description: 'Identifiant de l\'élément (ex : k-c3-4).' }, resultat: { type: 'integer', enum: [0, 1, 2] } }, required: ['id', 'resultat'], additionalProperties: false } }
     ];
     TOOLS.forEach(t => { t.eager_input_streaming = true; });
 
     function runTool(name, input, ctx) {
       const fmt = d => ({ id: d.id, type: d.kind, chapitre: d.ch ? d.ch + ' (' + d.chap.title + ', ' + d.mat.title + ')' : d.mat.title + ' · épreuve', titre: plain(d.title), texte: plain(d.body), ref: d.ref || undefined });
+      if (name === 'schema_raisonnement') {
+        const T = ctx.issues(String(input.requete || ''));
+        return { label: 'Je cherche le schéma de raisonnement', docs: [], out: T.length ? T.map(t => ({ titre: t.title, chapitre: t.ch, depart: t.start, noeuds: t.nodes })) : 'Aucun schéma ne correspond.' };
+      }
       if (name === 'chercher_cours') {
         const n = Math.max(1, Math.min(12, input.nombre || 6)), r = ctx.search(String(input.requete || ''), n);
         ctx.hooks.light(r);

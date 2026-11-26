@@ -189,6 +189,7 @@
     const modes = h('div', { class: 'b-modes' },
       h('button', { type: 'button', class: 'b-mode prof', onclick: () => openChat() }, 'Le prof'),
       h('button', { type: 'button', class: 'b-mode', onclick: () => { openChat(); prof.lesson(focusL ? focusL.ch : null); } }, 'Cours'),
+      h('button', { type: 'button', class: 'b-mode', onclick: () => { openChat(); prof.cas(); } }, 'Cas pratique'),
       h('button', { type: 'button', class: 'b-mode', onclick: () => pickLobe('Récital', startRecital) }, 'Récital'),
       h('button', { type: 'button', class: 'b-mode', onclick: () => pickLobe('Interro', startInterro) }, 'Interro'),
       h('button', { type: 'button', class: 'b-mode ghost', onclick: resetView }, 'Vue d\'ensemble'));

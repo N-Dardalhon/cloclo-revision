@@ -36,7 +36,7 @@ window.MATIERES = [
       ['Introduction · Les contrats spéciaux', [['Diversité et multiplicité', ['v1']]]],
       ['Partie 1 · L\'identification de la vente', [['Prix, chose, transfert de propriété', ['v2']]]],
       ['Partie 2 · La formation de la vente', [['Titre 1 · Les conditions de fond', ['v3', 'v4', 'v5']], ['Titre 2 · Les conditions de forme', ['v6']]]],
-      ['Partie 3 · Les effets de la vente', [['Titre 1 · Les effets réels', ['v7', 'v8']], ['Titre 2 · Les effets personnels', ['v9']]]]
+      ['Partie 3 · Les effets de la vente', [['Titre 1 · Les effets réels', ['v7', 'v8']], ['Titre 2 · Les effets personnels', ['v9', 'v10', 'v11', 'v12']]]]
     ],
     chapters: [
       {id:'v1', n:1, part:'Introduction', title:'Les contrats spéciaux : diversité et qualification', short:'Introduction', blurb:'contrats nommés, innomés, qualification et droits spéciaux', col:'#F2A6A0'},
@@ -47,7 +47,10 @@ window.MATIERES = [
       {id:'v6', n:6, part:'Partie 2 · Titre 2', title:'Les conditions de forme', short:'Formes', blurb:'solennelles, informatives, publicitaires, probatoires', col:'#F5B38A'},
       {id:'v7', n:7, part:'Partie 3 · Titre 1 · Chap. 1', title:'Le transfert de propriété', short:'Propriété', blurb:'solo consensu, tiers, réserve de propriété', col:'#E9A6D2'},
       {id:'v8', n:8, part:'Partie 3 · Titre 1 · Chap. 2', title:'Le transfert des risques', short:'Risques', blurb:'res perit domino, res perit debitori', col:'#A9DCD0'},
-      {id:'v9', n:9, part:'Partie 3 · Titre 2 · Chap. 1', title:'Les obligations du vendeur', short:'Vendeur', blurb:'délivrance conforme et garantie d\'éviction', col:'#D8CF7E'}
+      {id:'v9', n:9, part:'Partie 3 · Titre 2 · Chap. 1', title:'Les obligations du vendeur : délivrance et éviction', short:'Vendeur', blurb:'délivrance conforme et garantie d\'éviction', col:'#D8CF7E'},
+      {id:'v10', n:10, part:'Partie 3 · Titre 2 · Chap. 1', title:'La garantie des vices cachés', short:'Vices cachés', blurb:'vice caché, antérieur, grave ; action directe, 2 ans, clauses', col:'#C9B3E6'},
+      {id:'v11', n:11, part:'Partie 3 · Titre 2 · Chap. 1', title:'Garantie de conformité et obligation de sécurité', short:'Conformité', blurb:'consommateur, mise en conformité, sécurité, quelle action choisir', col:'#9FD3B5'},
+      {id:'v12', n:12, part:'Partie 3 · Titre 2 · Chap. 2', title:'Les obligations de l\'acheteur', short:'Acheteur', blurb:'payer le prix, retirer la chose, sanctions', col:'#F0B5A8'}
     ]
   }
 ];
